@@ -1,0 +1,84 @@
+version: '2.4'
+services:
+  workstation:
+    build:
+      context: ..
+      dockerfile: docker/workstation/Dockerfile
+    networks:
+      internal:
+        ipv4_address: "198.18.1.100"
+      gui:
+    environment:
+      DISPLAY: 192.168.0.5:0.0
+    privileged: true
+    cap_add:
+      - ALL
+      - NET_ADMIN
+  proxy:
+    build:
+      context: ..
+      dockerfile: docker/proxy/Dockerfile
+    networks:
+      internal:
+        ipv4_address: "198.18.1.254"
+      external:
+        ipv4_address: "198.18.0.2"
+    privileged: true
+    volumes:
+      - "../src/:/root/go/src"
+    environment:
+      - GOPATH=/root/go/
+    command: /bin/bash -c "/root/configure_ip.sh && bash"
+    ports:
+      - "40000:40000"
+    cap_add:
+      - ALL
+      - NET_ADMIN
+      - SYS_PTRACE
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/gateway/Dockerfile
+    networks:
+      external:
+        ipv4_address: "198.18.0.254"
+    privileged: true
+    cap_add:
+      - ALL
+      - NET_ADMIN
+    volumes:
+      - "../src/:/root/go/src"
+    environment:
+      - GOPATH=/root/go
+  target:
+    build:
+      context: ..
+      dockerfile: docker/target/Dockerfile
+    networks:
+      external:
+        ipv4_address: "198.18.0.18"
+    environment:
+      DISPLAY: 192.168.0.5:0.0
+networks:
+  internal:
+    name: internal
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "198.18.1.0/24"
+  external:
+    name: external
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "198.18.0.0/24"
+  gui:
+    name: gui
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.25.0.0/24"
+          gateway: "172.25.0.1"
