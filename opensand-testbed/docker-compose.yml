@@ -26,6 +26,7 @@ services:
       - "5926"
     volumes:
       - ./gateway/config:/opensand_config
+      - ../src/:/root/go/src
     networks:
       emulation:
         ipv4_address: 172.20.0.3
@@ -42,6 +43,8 @@ services:
       - /dev/net/tun
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
+    environment:
+      GOPATH: /root/go
   terminal:
     build: terminal/
     ports:
@@ -50,6 +53,9 @@ services:
       - "5926"
     volumes:
       - ./terminal/config:/opensand_config
+      - ../src/:/root/go/src
+    environment:
+      GOPATH: /root/go
     networks:
       emulation:
         ipv4_address: 172.20.0.4

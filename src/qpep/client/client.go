@@ -17,7 +17,7 @@ import (
 var (
 	proxyListener net.Listener
 	clientConfig  = ClientConfig{ListenHost: "0.0.0.0", ListenPort: 8080,
-		GatewayHost: "198.18.0.254", GatewayPort: 4242,
+		GatewayHost: "172.20.0.3", GatewayPort: 4242,
 		QuicStreamTimeout: 2}
 )
 
