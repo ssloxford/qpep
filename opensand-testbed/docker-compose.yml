@@ -1,0 +1,126 @@
+version: '2.4'
+services:
+  satellite:
+    build: satellite/
+    ports:
+      - "3141"
+      - "5358"
+      - "5926"
+      - "5656:5656"
+    volumes:
+      - ./satellite/config:/opensand_config
+    networks:
+      emulation:
+        ipv4_address: 172.20.0.2
+    privileged: true
+    environment:
+      DISPLAY: 10.21.204.73:0
+    depends_on:
+      - "gateway"
+      - "terminal"
+  gateway:
+    build: gateway/
+    ports:
+      - "3141"
+      - "5358"
+      - "5926"
+    volumes:
+      - ./gateway/config:/opensand_config
+    networks:
+      emulation:
+        ipv4_address: 172.20.0.3
+        priority: 900
+      gwlan:
+        ipv4_address: "172.22.0.3"
+        priority: 1000
+        ipv6_address: 2001:660:6602:142:0:0:1:1
+    privileged: true
+    cap_add:
+      - ALL
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+  terminal:
+    build: terminal/
+    ports:
+      - "3141"
+      - "5358"
+      - "5926"
+    volumes:
+      - ./terminal/config:/opensand_config
+    networks:
+      emulation:
+        ipv4_address: 172.20.0.4
+        priority: 900
+      stlan:
+        ipv4_address: "172.21.0.4"
+        priority: 1000
+        ipv6_address: 2001:661:6602:142:0:0:1:2
+    privileged: true
+    cap_add:
+      - ALL
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+  ws-st:
+    build: ws-st/
+    networks:
+      stlan:
+        ipv4_address: "172.21.0.9"
+      gui:
+        ipv4_address: "172.25.0.9"
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      DISPLAY: 10.21.204.73:0
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+  ws-gw:
+    build: ws-gw/
+    networks:
+      gwlan:
+        ipv4_address: "172.22.0.9"
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+networks:
+  emulation:
+    name: emulation
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.20.0.0/24"
+  gwlan:
+    name: gwlan
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.22.0.0/24"
+        - subnet: "2001:660:6602:142::1/64"
+  stlan:
+    name: stlan
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.21.0.0/24"
+        - subnet: "2001:661:6602:142::1/64"
+  gui:
+    name: gui
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.25.0.0/24"
+          gateway: "172.25.0.1"

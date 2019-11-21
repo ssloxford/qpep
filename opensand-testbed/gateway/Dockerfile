@@ -1,0 +1,15 @@
+FROM ubuntu:16.04
+RUN echo "deb [trusted=yes] http://packages.net4sat.org/opensand xenial stable" | tee /etc/apt/sources.list.d/opensand.list
+RUN apt-get update
+RUN apt-get install -y opensand
+RUN apt-get install -y net-tools
+RUN apt-get install -y iptables
+RUN apt-get install -y iputils-ping
+RUN apt-get install -y netcat
+EXPOSE 3141
+EXPOSE 5358
+EXPOSE 5926
+COPY config/gw.conf /etc/opensand/daemon.conf
+COPY config/entrypoint.sh /tmp/entrypoint.sh
+RUN chmod +x /tmp/entrypoint.sh
+ENTRYPOINT /bin/bash /tmp/entrypoint.sh
