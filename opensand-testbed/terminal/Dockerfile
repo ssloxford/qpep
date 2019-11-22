@@ -7,7 +7,7 @@ RUN apt-get install -y iputils-ping
 RUN apt-get install -y netcat
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:longsleep/golang-backports
-RUN apt-get update && apt-get install -y golang-go
+RUN apt-get update && apt-get install -y golang-go iptables
 EXPOSE 3141
 EXPOSE 5358
 EXPOSE 5926

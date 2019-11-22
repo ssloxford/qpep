@@ -1,6 +1,7 @@
 version: '2.4'
 services:
   satellite:
+    container_name: satellite
     build: satellite/
     ports:
       - "3141"
@@ -14,11 +15,12 @@ services:
         ipv4_address: 172.20.0.2
     privileged: true
     environment:
-      DISPLAY: 10.21.204.73:0
+      DISPLAY:
     depends_on:
       - "gateway"
       - "terminal"
   gateway:
+    container_name: gateway
     build: gateway/
     ports:
       - "3141"
@@ -46,6 +48,7 @@ services:
     environment:
       GOPATH: /root/go
   terminal:
+    container_name: terminal
     build: terminal/
     ports:
       - "3141"
@@ -73,6 +76,7 @@ services:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
   ws-st:
+    container_name: ws-st
     build: ws-st/
     networks:
       stlan:
@@ -83,10 +87,11 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      DISPLAY: 10.21.204.73:0
+      DISPLAY:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
   ws-gw:
+    container_name: ws-gw
     build: ws-gw/
     networks:
       gwlan:
