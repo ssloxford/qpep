@@ -5,8 +5,14 @@ RUN apt-get install -y netcat
 RUN apt-get install -y iputils-ping
 RUN apt-get install -y net-tools
 RUN apt-get install -y iproute2
-RUN apt-get update && apt-get install -y qupzilla ca-certificates
+RUN apt-get install -y qupzilla ca-certificates
+RUN apt-get install -y iperf3
+RUN apt-get install -y python3
+RUN apt-get install -y openvpn
+RUN apt-get install -y wget
 RUN update-ca-certificates
+COPY client.ovpn /root/client.ovpn
+COPY speedtest.py /tmp/speedtest.py
 COPY launch_firefox.sh /tmp/launch_firefox.sh
 RUN chmod +x /tmp/launch_firefox.sh
 CMD exec tail -f /dev/null
