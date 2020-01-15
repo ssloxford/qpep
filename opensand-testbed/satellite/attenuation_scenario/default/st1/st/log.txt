@@ -1,0 +1,5 @@
+1579090986.372692 DVB.login Login sent to GW
+1579090986.378706 Status Blocks initialized
+1579090991.372939 DVB.login Login sent to GW
+1579090991.876732 DVB.login Login complete with MAC 1
+1579091017.541641 Status Simulation stopped

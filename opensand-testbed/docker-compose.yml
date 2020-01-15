@@ -10,6 +10,7 @@ services:
       - "5656:5656"
     volumes:
       - ./satellite/config:/opensand_config
+      - ./satellite/attenuation_scenario:/attenuation_scenario
     networks:
       emulation:
         ipv4_address: 172.20.0.2
@@ -101,6 +102,9 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - "../src/:/root/go/src"
+      - "./ws-gw/config:/opensand_config"
   ws-ovpn:
     container_name: ws-ovpn
     build: ws-ovpn/
@@ -113,6 +117,14 @@ services:
     networks:
       gwlan:
         ipv4_address: "172.22.0.10"
+  sitespeed:
+    container_name: sitespeed
+    build: sitespeed/
+    cap_add:
+      - NET_ADMIN
+    networks:
+      stlan:
+        ipv4_address: "172.21.0.15"
 networks:
   emulation:
     name: emulation

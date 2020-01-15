@@ -1,0 +1,16 @@
+1579090986.097222 Status Blocks initialized
+1579090986.699991 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST1 that is not registered
+
+1579090988.793290 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST1 that is not registered
+
+1579090988.793382 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST1 that is not registered
+
+1579090990.136571 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
+
+1579090991.623452 Spot_1.DVB.logon_request Logon request received from ST1 on spot 1
+1579090991.624380 Spot_1.DVB.logon_response Logon response send to ST1 on spot 1
+1579090998.138799 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
+
+1579091014.143190 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
+
+1579091016.956704 Status Simulation stopped

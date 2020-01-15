@@ -2,6 +2,7 @@ package shared
 
 import (
 	"encoding/binary"
+	"io"
 	"net"
 )
 
@@ -29,10 +30,51 @@ func (header QpepHeader) ToBytes() []byte {
 	return byteOutput
 }
 
+func GetQpepHeader(stream io.Reader) (QpepHeader, error) {
+	header := QpepHeader{}
+	preamble := make([]byte, QPEP_PREAMBLE_LENGTH)
+	_, err := stream.Read(preamble)
+	if err != nil {
+		return header, err
+	}
+
+	var sourceIpEnd int
+	if preamble[0] == 0x04 {
+		sourceIpEnd = net.IPv4len
+	} else {
+		sourceIpEnd = net.IPv6len
+	}
+
+	sourcePortEnd := sourceIpEnd + 2
+
+	var destIpEnd int
+	if preamble[1] == 0x04 {
+		destIpEnd = sourcePortEnd + net.IPv4len
+	} else {
+		destIpEnd = sourcePortEnd + net.IPv6len
+	}
+	destPortEnd := destIpEnd + 2
+
+	byteInput := make([]byte, destPortEnd)
+	_, err = stream.Read(byteInput)
+	if err != nil {
+		return header, err
+	}
+	srcIPAddr := net.IP(byteInput[0:sourceIpEnd])
+	srcPort := int(binary.LittleEndian.Uint16(byteInput[sourceIpEnd:sourcePortEnd]))
+
+	destIPAddr := net.IP(byteInput[sourcePortEnd:destIpEnd])
+	destPort := int(binary.LittleEndian.Uint16(byteInput[destIpEnd:destPortEnd]))
+
+	srcAddr := &net.TCPAddr{IP: srcIPAddr, Port: srcPort}
+	dstAddr := &net.TCPAddr{IP: destIPAddr, Port: destPort}
+	return QpepHeader{SourceAddr: srcAddr, DestAddr: dstAddr}, nil
+}
+
 func QpepHeaderFromBytes(byteInput []byte) QpepHeader {
 	var sourceIpEnd int
 	if byteInput[0] == 0x04 {
-		sourceIpEnd = QPEP_PREAMBLE_LENGTH + net.IPv4len
+		sourceIpEnd = QPEP_PREAMBLE_LENGTH * +net.IPv4len
 	} else {
 		sourceIpEnd = QPEP_PREAMBLE_LENGTH + net.IPv6len
 	}

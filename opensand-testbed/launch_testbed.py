@@ -1,192 +1,126 @@
-import subprocess
-import os
 from loguru import logger
-import nclib
 import docker
-import json
-import time
+import sys
+import copy
+import pprint
+from testbeds import BasicTestbed
+from scenarios import QPEPScenario, OpenVPNScenario, PEPsalScenario, PlainScenario
+from benchmarks import IperfBenchmark, SitespeedBenchmark
 
-def launch_qpep():
-    docker_client = docker.from_env()
-    logger.debug("Starting Client Side of QPEP Proxy")
-    terminal_container = docker_client.containers.get("terminal")
-    terminal_container.exec_run("bash /opensand_config/launch_qpep.sh", detach=True)
-    logger.debug("Starting Gateway Side of QPEP Proxy")
-    gateway_container = docker_client.containers.get("gateway")
-    gateway_container.exec_run("bash /opensand_config/launch_qpep.sh", detach=True)
+HOST_IP = "10.21.205.121"
 
-
-def start_testbed(host_ip, display_number):
-    logger.debug("Shutting Down Previous Testbeds")
-    subprocess.call(["docker-compose", "down"])
-    my_env = {**os.environ, 'DISPLAY': str(host_ip) + ":" + str(display_number)}
-    logger.debug("Starting Testbed Containers")
-    subprocess.call(["docker-compose", "up", "-d"], env=my_env)
-
-    logger.debug("Starting Opensand Platform")
-    opensand_launched = False
-    while not opensand_launched:
-        try:
-            nc = nclib.Netcat(('localhost', 5656), verbose=False)
-            nc.recv_until(b'help')
-            nc.recv()
-            nc.send(b'status\n')
-            response = nc.recv()
-            opensand_launched = ('SAT' in str(response)) and ('GW0' in str(response)) and ('ST1' in str(response))
-        except nclib.errors.NetcatError:
-            continue
-
-    time.sleep(1) # it often takes a little while for Opensand to identify all hosts
-    logger.debug("Launching Opensand Simulation")
-    nc.send(b'start\n')
-    simulation_running = False
-    while not simulation_running:
-        nc.send(b'status\n')
-        response = str(nc.recv())
-        simulation_running = response.count('RUNNING') > 3
-
-    logger.debug("Connecting User Terminal to Satellite Spot Beam")
+def ack_bundling_test():
+    test_results = {}
+    start_testbed(HOST_IP, 0)
+    connect_terminal_workstation(HOST_IP)
+    configure_qpep()
     docker_client = docker.from_env()
     terminal_container = docker_client.containers.get("terminal")
-    terminal_container.exec_run("/sbin/ip route delete default")
-    terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
-    logger.success("OpeSAND Testbed Running")
-
-def connect_terminal_workstation(host_ip):
-    logger.debug("Starting User Workstation")
-    docker_client = docker.from_env()
-    workstation_container = docker_client.containers.get("ws-st")
-    logger.debug("Adding External Route to Docker Host for GUI Services")
-    workstation_container.exec_run("ip route add " + str(host_ip) + " via 172.25.0.1 dev eth1")
-    logger.debug("Connecting User Workstation to Satellite Router")
-    workstation_container.exec_run("ip route del default")
-    workstation_container.exec_run("ip route add default via 172.21.0.4")
-    logger.success("Client Workstation Connected to Satellite Network")
-
-def launch_web_browser():
-    logger.debug("Launching Web Browser on User Workstation")
-    docker_client = docker.from_env()
-    workstation_container = docker_client.containers.get("ws-st")
-    workstation_container.exec_run("qupzilla", detach=True)
-
-def launch_wireshark():
-    logger.debug("Starting Wireshark on Satellite Endpoint")
-    docker_client = docker.from_env()
-    satellite_container = docker_client.containers.get("satellite")
-    satellite_container.exec_run("wireshark", detach=True)
-
-def launch_pepsal(gateway=False, terminal=True):
-    logger.debug("Starting PEPSal on Gateway Endpoint")
-    docker_client = docker.from_env()
-    if terminal:
-        terminal_client = docker_client.containers.get("terminal")
-        terminal_client.exec_run("bash /opensand_config/launch_pepsal.sh")
-    if gateway:
-        gateway_client = docker_client.containers.get("gateway")
-        gateway_client.exec_run("bash /opensand_config/launch_pepsal.sh")
-
-def run_iperf_test():
-    logger.debug("Starting iperf server")
-    docker_client = docker.from_env()
     gateway_workstation = docker_client.containers.get("ws-gw")
-    gateway_workstation.exec_run("iperf3 -s", detach=True)
-    logger.debug("Starting iperf client")
-    terminal_workstation = docker_client.containers.get("ws-st")
-    exit_code, output = terminal_workstation.exec_run("iperf3 -c 172.22.0.9 --json")
-    json_string = output.decode('unicode_escape').rstrip('\n').replace('Linux\n', 'Linux') # there's an error in iperf3's json output here
-    results = json.loads(json_string)
-    return {
-        "sent_bytes": results["end"]["sum_sent"]["bytes"],
-        "sent_bps": results["end"]["sum_sent"]["bits_per_second"],
-        "received_bytes": results["end"]["sum_received"]["bytes"],
-        "received_bps": results["end"]["sum_received"]["bits_per_second"],
-    }
+    for i in range(0, 100, 5):
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -acks " + str(i), detach=True)
+        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -acks " + str(i), detach=True)
+        results = run_iperf_test()
+        print(i, "ACKS: ",round(results['sent_bps']/1000000, 3),"/",round(results['received_bps']/1000000, 3))
+        #print(results)
+        test_results[str(i)] = {
+            "sent_bps": results['sent_bps'],
+            "received_bps": results['received_bps']
+        }
+        terminal_container.exec_run("pkill -9 main")
+        gateway_workstation.exec_run("pkill -9 main")
+    print(test_results)
 
-def run_speedtest_test():
-    logger.debug("Launching Speedtest CLI")
+def ack_decimation_test():
+    test_results = {}
+    start_testbed(HOST_IP, 0)
+    connect_terminal_workstation(HOST_IP)
+    configure_qpep()
     docker_client = docker.from_env()
-    terminal_workstation = docker_client.containers.get("ws-st")
-    speedtest_results = terminal_workstation.exec_run('python3 /tmp/speedtest.py --json --server 838')
-    json_string = speedtest_results.output.decode('unicode_escape').rstrip('\n')
-    json_data = json.loads(json_string)
-    return {
-        "sent_bytes": json_data["bytes_sent"],
-        "received_bytes": json_data["bytes_received"],
-        "sent_bps": json_data["upload"],
-        "received_bps": json_data["download"]
-    }
+    terminal_container = docker_client.containers.get("terminal")
+    gateway_workstation = docker_client.containers.get("ws-gw")
+    for i in range(0, 20):
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -decimate " + str(i), detach=True)
+        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -decimate " + str(i), detach=True)
+        iperf_results = run_iperf_test()
+        speedtest_results = run_speedtest_test()
+        print(i, "ACKS: ",round(iperf_results['sent_bps']/1000000, 3),"/",
+              round(iperf_results['received_bps']/1000000, 3), "(iperf)\n",
+              round(speedtest_results['sent_bps']/1000000, 3), "/", round(speedtest_results['received_bps']/1000000, 3))
+        #print(results)
+        test_results[str(i)] = {
+            "iperf": iperf_results,
+            "speedtest": speedtest_results
+        }
+        terminal_container.exec_run("pkill -9 main")
+        gateway_workstation.exec_run("pkill -9 main")
+    print(test_results)
 
-def launch_vpn():
-    logger.debug("Launching OpenVPN on User Workstation")
-    docker_client = docker.from_env()
-    terminal_workstation = docker_client.containers.get("ws-st")
-    ovpn_results = terminal_workstation.exec_run("openvpn --config /root/client.ovpn --daemon")
-    time.sleep(20) # it takes a while for OVPN to esablish a connection over satellite, so we can just wait to be sure (otherwise we have to configure with systemd)
+def summarize_test_result(results):
+    for item in list(results.items()):
+        print(item[0], ": ", round(item[1]["sent_bps"]/1000000,3), "/", round(item[1]["received_bps"]/1000000, 3))
 
-def benchmark_with_iperf(pepsal=False, plain=False, qpep=False, ovpn=False):
+def attenuation_test_scenario():
+    testbed = BasicTestbed(host_ip=HOST_IP)
+    attenuation_levels = [i for i in range(0,5)]
+    # test a 10kb transfer
+    iperf_file_sizes = [100000]
+    benchmarks = [IperfBenchmark(file_sizes=iperf_file_sizes)]
+
+    # test with pepsal vs qpep vs plain
+    pepsal_scenario = PEPsalScenario(name="PEPsal Attenuation  ", testbed=testbed,benchmarks=copy.deepcopy(benchmarks))
+    qpep_scenario = QPEPScenario(name="QPEP Attenuation  ", testbed=testbed, benchmarks=copy.deepcopy(benchmarks))
+    plain_scenario = PlainScenario(name="Plain Attenuation  ", testbed=testbed, benchmarks=copy.deepcopy(benchmarks))
+    scenarios = [plain_scenario, pepsal_scenario, qpep_scenario]
     results = {}
-    #plain test
-    if plain:
-        logger.debug("Launching plain satellite network iperf3 test")
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        results["plain"] = run_iperf_test()
-
-    if ovpn:
-        #note for some reason this hangs unless you run the iperf commands manually within docker
-        logger.debug("Launching openvpn satellite network iperf3 test")
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        launch_vpn()
-        results["ovpn"] = run_iperf_test()
-
-    #pepsal test
-    if pepsal:
-        logger.debug("Launching unencrypted PEPSAL network iperf3 test")
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        launch_pepsal(gateway=True, terminal=True)
-        results["pepsal"] = run_iperf_test()
-
-    #qpep test
-    if qpep:
-        logger.debug("Launching encrypted QPEP network iperf3 test")
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        launch_qpep()
-        results["qpep"] = run_iperf_test()
-
-    return results
-
-def benchmark_with_speedtest(pepsal=False, plain=False, qpep=False, ovpn=False):
-    results = {}
-    if plain:
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        results["plain"] = run_speedtest_test()
-
-    if ovpn:
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        launch_vpn()
-        results["ovpn"] = run_speedtest_test()
-
-
-    if pepsal:
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        launch_pepsal(gateway=True, terminal=True)
-        results["pepsal"] = run_speedtest_test()
-    if qpep:
-        start_testbed("10.21.205.226", 0)
-        connect_terminal_workstation("10.21.205.226")
-        launch_qpep()
-        results["qpep"] = run_speedtest_test()
-
-    return results
-
+    for scenario in scenarios:
+        for attenuation_level in attenuation_levels:
+            scenario.deploy_scenario()
+            scenario.name = scenario.name[:-1] + str(attenuation_level)
+            logger.debug("Running attenuation scenario for attenuation="+str(attenuation_level))
+            scenario.testbed.set_downlink_attenuation(attenuation_level)
+            scenario.testbed.run_attenuation_scenario()
+            scenario.run_benchmarks(deployed=True)
+            scenario.print_results()
+    logger.success("Attenuation Test Complete")
+    pprint.pprint(results)
 if __name__ == '__main__':
-    #start_testbed("10.21.205.226", 0)
-    #connect_terminal_workstation("10.21.205.226")
-    print(benchmark_with_iperf(pepsal=True, ovpn=True, qpep=True, plain=True))
-    print(benchmark_with_speedtest(ovpn=True, pepsal=True, qpep=True, plain=True))
+    logger.remove()
+    #logger.add(sys.stderr, level="SUCCESS")
+    #logger.add(sys.stderr, level="DEBUG")
+    attenuation_test_scenario()
+
+    #testbed = BasicTestbed(host_ip=HOST_IP)
+    #testbed.start_testbed()
+    #testbed.set_downlink_attenuation(5)
+    #testbed.run_attenuation_scenario()
+
+    # iperf_file_sizes = ([10**i for i in range(3,9)] + [int((10**i)/2) for i in range(3,9)])
+    # iperf_file_sizes.sort()
+    # benchmarks = [IperfBenchmark(file_sizes=iperf_file_sizes)]
+    # plain_scenario = PlainScenario(name="Plain", testbed=testbed, benchmarks=copy.deepcopy(benchmarks))
+    # vpn_scenario = OpenVPNScenario(name="OpenVPN", testbed=testbed, benchmarks=copy.deepcopy(benchmarks))
+    # pepsal_scenario = PEPsalScenario(name="PEPSal", testbed=testbed, benchmarks=copy.deepcopy(benchmarks), terminal=True, gateway=False)
+    # qpep_scenario = QPEPScenario(name="QPEP", testbed=testbed, benchmarks=copy.deepcopy(benchmarks))
+    # #plain_scenario.deploy_scenario()
+    # #testbed.connect_sitespeed_workstation()
+    # #pepsal_scenario.deploy_scenario()
+    # scenarios = [plain_scenario, pepsal_scenario, qpep_scenario, vpn_scenario]
+    # for scenario in scenarios:
+    #     scenario.run_benchmarks()
+    #     scenario.print_results()
+    # #qpep_scenario.deploy_scenario()
+    # #scenarios = [qpep_scenario]
+    # #for scenario in scenarios:
+    # #    scenario.run_benchmarks()
+    # #    scenario.print_results()
+    # #for scenario in scenarios:
+    # #    scenario.print_results()
+    #
+    # #start_testbed("10.21.205.226", 0)
+    # #connect_terminal_workstation("10.21.205.226")
+    # #10000, 100000, 1000000, 10000000
+    # #result = benchmark_with_iperf(pepsal=False, qpep=False, ovpn=False, plain=True, file_sizes=[10000])
+    # #summarize_test_result(result)
+    # #ack_decimation_test()
+    # #print(benchmark_with_speedtest(qpep=True))
