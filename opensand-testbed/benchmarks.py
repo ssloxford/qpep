@@ -4,6 +4,7 @@ from loguru import logger
 from abc import ABC, abstractmethod
 import docker
 import json
+import time
 import re
 
 alexa_top_20 = [
@@ -45,22 +46,28 @@ class Benchmark(ABC):
                   round(item[1]["received_bps"]/1000000, 3))
 
 class IperfBenchmark(Benchmark):
-    def __init__(self, file_sizes):
+    def __init__(self, file_sizes, reset_on_run=False):
         self.file_sizes = file_sizes
+        self.reset_on_run = reset_on_run
         super().__init__(name="IPerf")
 
     def run(self):
         for file_size in self.file_sizes:
-            self.results["iperf_" + str(round(file_size/1000000, 3)) + "mb"] = self.run_iperf_test(file_size)
+            self.results["iperf_" + str(round(file_size/1000000, 3)) + "mb"] = self.run_iperf_test(file_size, self.reset_on_run)
 
-    def run_iperf_test(self, transfer_bytes):
+    def run_iperf_test(self, transfer_bytes, reset_on_run):
         logger.debug("Starting iperf server")
         docker_client = docker.from_env()
         gateway_workstation = docker_client.containers.get("ws-gw")
-        gateway_workstation.exec_run("pkill -9 iperf3")
+        if reset_on_run:
+            gateway_workstation.exec_run("pkill -9 iperf3")
+            time.sleep(1)
         gateway_workstation.exec_run("iperf3 -s", detach=True)
         logger.debug("Starting iperf client")
         terminal_workstation = docker_client.containers.get("ws-st")
+        if reset_on_run:
+            terminal_workstation.exec_run("pkill -9 iperf3")
+            time.sleep(1)
         exit_code, output = terminal_workstation.exec_run("iperf3 -c 172.22.0.9 -R --json -n " + str(transfer_bytes))
         json_string = output.decode('unicode_escape').rstrip('\n').replace('Linux\n', 'Linux') # there's an error in iperf3's json output here
         test_result = json.loads(json_string)
@@ -92,10 +99,12 @@ class IperfBenchmark(Benchmark):
         }
 
 class SitespeedBenchmark(Benchmark):
-    def __init__(self, hosts=alexa_top_20):
+    def __init__(self, hosts=alexa_top_20, iterations=1):
         self.hosts = hosts
+        self.iterations = iterations
         super().__init__(name="SiteSpeed")
         self.results = []
+        self.errors = 0
 
     def run(self):
         logger.debug("Launching SiteSpeed.io Tests")
@@ -109,10 +118,11 @@ class SitespeedBenchmark(Benchmark):
         host_string = ''
         for host in self.hosts:
             host_string = host + " "
-            host_result = terminal_workstation.exec_run('/usr/src/app/bin/browsertime.js -n 1 --headless --video false --visualElements false ' + str(host_string))
+            host_result = terminal_workstation.exec_run('/usr/src/app/bin/browsertime.js -n ' + str(self.iterations) +' --headless --video false --visualElements false ' + str(host_string))
             matches = re.findall('Load: ([0-9.]+)([ms])', str(host_result))
+            print(host_result)
             if len(matches) == 0:
-                logger.error("No browsertime measurement for ", host_string)
+                logger.warning("No browsertime measurement for " + str(host_string))
                 print(host_result)
             for match in matches:
                 # if the connection measures in milliseconds we take as is, otherwise convert
@@ -121,10 +131,15 @@ class SitespeedBenchmark(Benchmark):
                 elif match[1] == 's':
                     self.results.append(float(match[0])*1000)
                 logger.debug("Browsertime: " + str(host_string) + " " + str(match[0]) + str(match[1]))
+            #count failed connections for host
+            error_matches = re.findall('UrlLoadError', str(host_result))
+            self.errors = self.errors + len(error_matches)
+            logger.debug("Browsertime Error Count: " + str(len(error_matches)))
 
     def print_results(self):
         print("Mean page load time: ", mean(self.results))
         print("Load time measurements: ", self.results)
+        print("Failed load count: ", self.errors)
 
 class SpeedtestBenchmark(Benchmark):
     def __init__(self, server_id=13658):

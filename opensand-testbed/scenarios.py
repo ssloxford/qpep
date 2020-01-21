@@ -29,11 +29,11 @@ class Scenario(ABC):
             benchmark.print_results()
 
 class PlainScenario(Scenario):
-    def deploy_scenario(self):
+    def deploy_scenario(self, testbed_up=False):
         super().deploy_scenario()
 
 class OpenVPNScenario(Scenario):
-    def deploy_scenario(self):
+    def deploy_scenario(self, testbed_up=False):
         super().deploy_scenario()
         docker_client = docker.from_env()
         terminal_workstation = docker_client.containers.get("ws-st")
@@ -43,7 +43,7 @@ class OpenVPNScenario(Scenario):
         time.sleep(20)
 
 class QPEPScenario(Scenario):
-    def deploy_scenario(self):
+    def deploy_scenario(self, testbed_up=False):
         super().deploy_scenario()
         docker_client = docker.from_env()
 
@@ -68,8 +68,9 @@ class PEPsalScenario(Scenario):
         self.gateway = gateway
         super().__init__(name=name, testbed=testbed, benchmarks=benchmarks)
 
-    def deploy_scenario(self):
-        super().deploy_scenario()
+    def deploy_scenario(self, testbed_up=False):
+        if not testbed_up:
+            super().deploy_scenario()
         logger.debug("Starting PEPsal Scenario")
         docker_client = docker.from_env()
 

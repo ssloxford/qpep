@@ -11,6 +11,7 @@ services:
     volumes:
       - ./satellite/config:/opensand_config
       - ./satellite/attenuation_scenario:/attenuation_scenario
+      - ./satellite/delay_scenario:/delay_scenario
     networks:
       emulation:
         ipv4_address: 172.20.0.2

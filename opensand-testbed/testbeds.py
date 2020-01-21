@@ -21,7 +21,7 @@ class BasicTestbed(object):
         logger.debug("Starting Testbed Containers")
 
         # Start the docker containers
-        subprocess.call(["docker-compose", "up", "-d"], env=my_env, stderr=subprocess.DEVNULL)
+        subprocess.call(["docker-compose", "up", "-d"], env=my_env)
 
         # Wait for the opensand container to initialize then send a command to run the simulation
         logger.debug("Starting Opensand Platform")
@@ -55,6 +55,10 @@ class BasicTestbed(object):
         terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
         logger.success("OpeSAND Testbed Running")
 
+    def stop_testbed(self):
+        logger.debug("Shutting Down Previous Testbeds")
+        subprocess.call(["docker-compose", "down"])
+
     def connect_terminal_workstation(self):
         logger.debug("Starting User Workstation")
         docker_client = docker.from_env()
@@ -87,7 +91,7 @@ class BasicTestbed(object):
         workstation_container.exec_run("qupzilla", detach=True)
 
     def set_downlink_attenuation(self, attenuation_value=0):
-        logger.debug("Setting OpenSAND Downlink Attenuation to", attenuation_value)
+        logger.debug("Setting OpenSAND Downlink Attenuation to " + str(attenuation_value))
         gw_path = 'satellite/attenuation_scenario/gw0/plugins/ideal.conf'
         st_path = 'satellite/attenuation_scenario/st1/plugins/ideal.conf'
         gw_conf = ET.parse(gw_path)
@@ -118,18 +122,75 @@ class BasicTestbed(object):
         logger.debug("Connected to NC Listener")
         # stop running scenarios if any
         nc.send(b'stop\n')
-        nc.recv_until(b'OK')
+        nc.recv_until(b'OK', timeout=10)
         nc.recv()
         # opensand reports that the testbed has stopped a little before it actually has
         time.sleep(1)
 
         # load attenuation scenario
         nc.send(b'scenario attenuation_scenario\n')
-        nc.recv_until(b'OK')
+        nc.recv_until(b'OK', timeout=10)
         nc.recv()
 
         # start new scenario
         nc.send(b'start\n')
-        nc.recv_until(b'OK')
+        nc.recv_until(b'OK', timeout=10)
+        logger.debug("Scenario Restarted")
         nc.recv()
+
+        # ensure that the terminal modem is still connected
+        docker_client = docker.from_env()
+        terminal_container = docker_client.containers.get("terminal")
+        #terminal_container.exec_run("/sbin/ip route delete default")
+        terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
+
         logger.debug("Attenuation Scenario Launched")
+
+class LeoTestbed(BasicTestbed):
+    def start_testbed(self):
+        # First, shut down any old running testbeds
+        logger.debug("Shutting Down Previous Testbeds")
+        subprocess.call(["docker-compose", "down"], stderr=subprocess.DEVNULL)
+
+        # The DISPLAY env variable points to an X server for showing OpenSAND UI
+        my_env = {**os.environ, 'DISPLAY': str(self.host_ip) + ":" + str(self.display_number)}
+        logger.debug("Starting Testbed Containers")
+
+        # Start the docker containers
+        subprocess.call(["docker-compose", "up", "-d"], env=my_env)
+
+        # Wait for the opensand container to initialize then send a command to run the simulation
+        logger.debug("Starting Opensand Platform")
+        opensand_launched = False
+        while not opensand_launched:
+            try:
+                nc = nclib.Netcat(('localhost', 5656), verbose=False)
+                nc.recv_until(b'help')
+                nc.recv()
+                nc.send(b'status\n')
+                response = nc.recv()
+                opensand_launched = ('SAT' in str(response)) and ('GW0' in str(response)) and ('ST1' in str(response))
+            except nclib.errors.NetcatError:
+                continue
+
+        logger.debug("Loading Iridium Delay Simulation")
+        nc.send(b'scenario delay_scenario\n')
+        nc.recv_until(b'OK', timeout=10)
+        nc.recv()
+        time.sleep(1) # it often takes a little while for Opensand to identify all hosts
+        logger.debug("Launching Opensand Simulation")
+        nc.send(b'start\n')
+        simulation_running = False
+        while not simulation_running:
+            nc.send(b'status\n')
+            response = str(nc.recv())
+            # wait for all three components (satellite, terminal and gateway) to start running
+            simulation_running = response.count('RUNNING') > 3
+
+        # now that the network is running, it is possible to add ip routes from user terminal through the network
+        logger.debug("Connecting User Terminal to Satellite Spot Beam")
+        docker_client = docker.from_env()
+        terminal_container = docker_client.containers.get("terminal")
+        terminal_container.exec_run("/sbin/ip route delete default")
+        terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
+        logger.success("OpeSAND Testbed Running")

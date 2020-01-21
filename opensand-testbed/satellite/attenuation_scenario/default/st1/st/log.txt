@@ -1,5 +1,69 @@
-1579090986.372692 DVB.login Login sent to GW
-1579090986.378706 Status Blocks initialized
-1579090991.372939 DVB.login Login sent to GW
-1579090991.876732 DVB.login Login complete with MAC 1
-1579091017.541641 Status Simulation stopped
+1579604643.417269 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.417713 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.422628 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.422879 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.423052 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.423238 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.423393 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.423567 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.423853 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.424019 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426608 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426725 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426782 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426817 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426865 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426895 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426939 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.426969 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427009 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427041 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427066 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427485 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427527 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427588 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427627 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427672 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427703 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427744 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427776 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427800 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427847 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.427872 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+
+1579604643.460350 DVB.login Login sent to GW
+1579604643.470572 Status Blocks initialized
+1579604648.460431 DVB.login Login sent to GW
+1579604648.974567 DVB.login Login complete with MAC 1
+1579605045.108848 Status Simulation stopped
