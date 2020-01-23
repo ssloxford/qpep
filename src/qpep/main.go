@@ -15,10 +15,12 @@ func main() {
 	clientFlag := flag.Bool("client", false, "a bool")
 	ackElicitingFlag := flag.Int("acks", 10, "Number of acks to bundle")
 	ackDecimationFlag := flag.Int("decimate", 4, "Denominator of Ack Decimation Ratio")
+	congestionWindowFlag := flag.Int("congestion", 4, "Number of QUIC packets for initial congestion window")
 	gatewayFlag := flag.String("gateway", "198.18.0.254", "IP address of gateway running qpep")
 	flag.Parse()
 	shared.QuicConfiguration.AckElicitingPacketsBeforeAck = *ackElicitingFlag
 	shared.QuicConfiguration.AckDecimationDenominator = *ackDecimationFlag
+	shared.QuicConfiguration.InitialCongestionWindowPackets = *congestionWindowFlag
 	client.ClientConfiguration.GatewayHost = *gatewayFlag
 
 	if *clientFlag {

@@ -61,6 +61,59 @@ class QPEPScenario(Scenario):
         gateway_workstation.exec_run("go run /root/go/src/qpep/main.go", detach=True)
         logger.success("QPEP Running")
 
+class QPEPAckScenario(Scenario):
+    def deploy_scenario(self, testbed_up=False, ack_level=4):
+        if not testbed_up:
+            super().deploy_scenario()
+
+        docker_client = docker.from_env()
+        terminal_container = docker_client.containers.get("terminal")
+        gateway_workstation = docker_client.containers.get("ws-gw")
+        if testbed_up:
+            logger.debug("Killing any prior QPEP")
+            terminal_container.exec_run("pkill -9 main")
+            gateway_workstation.exec_run("pkill -9 main")
+            time.sleep(1)
+        else:
+            logger.debug("Configuring Client Side of QPEP Proxy")
+            terminal_container.exec_run("bash /opensand_config/configure_qpep.sh")
+
+            logger.debug("Configuring Gateway Side of QPEP Proxy")
+            gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
+
+        logger.debug("Launching QPEP Client")
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -decimate " + str(ack_level), detach=True)
+        logger.debug("Launching QPEP Gateway")
+        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -decimate " + str(ack_level), detach=True)
+        logger.success("QPEP Running")
+
+
+class QPEPCongestionScenario(Scenario):
+    def deploy_scenario(self, testbed_up=False, congestion_window=10):
+        if not testbed_up:
+            super().deploy_scenario()
+
+        docker_client = docker.from_env()
+        terminal_container = docker_client.containers.get("terminal")
+        gateway_workstation = docker_client.containers.get("ws-gw")
+        if testbed_up:
+            logger.debug("Killing any prior QPEP")
+            terminal_container.exec_run("pkill -9 main")
+            gateway_workstation.exec_run("pkill -9 main")
+            time.sleep(1)
+        else:
+            logger.debug("Configuring Client Side of QPEP Proxy")
+            terminal_container.exec_run("bash /opensand_config/configure_qpep.sh")
+
+            logger.debug("Configuring Gateway Side of QPEP Proxy")
+            gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
+
+        logger.debug("Launching QPEP Client")
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -congestion " + str(congestion_window), detach=True)
+        logger.debug("Launching QPEP Gateway")
+        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -congestion " + str(congestion_window), detach=True)
+        logger.success("QPEP Running")
+
 
 class PEPsalScenario(Scenario):
     def __init__(self, name, testbed, benchmarks, terminal=True, gateway=False):
