@@ -1,0 +1,3 @@
+docker==4.1.0
+loguru==0.3.2
+nclib==0.8.3
