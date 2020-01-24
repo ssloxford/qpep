@@ -15,13 +15,14 @@ func (listener *ClientProxyListener) Accept() (net.Conn, error) {
 	return listener.AcceptTProxy()
 }
 
-func (listener *ClientProxyListener) AcceptTProxy() (*ProxyConn, error) {
+func (listener *ClientProxyListener) AcceptTProxy() (*net.TCPConn, error) {
 	tcpConn, err := listener.base.(*net.TCPListener).AcceptTCP()
 
 	if err != nil {
 		return nil, err
 	}
-	return &ProxyConn{TCPConn: tcpConn}, nil
+	return tcpConn, nil
+	//return &ProxyConn{TCPConn: tcpConn}, nil
 }
 
 func (listener *ClientProxyListener) Addr() net.Addr {

@@ -19,7 +19,7 @@ var (
 	proxyListener       net.Listener
 	ClientConfiguration = ClientConfig{ListenHost: "0.0.0.0", ListenPort: 8080,
 		GatewayHost: "198.18.0.254", GatewayPort: 4242,
-		QuicStreamTimeout: 2, MultiStream: false,
+		QuicStreamTimeout: 2, MultiStream: true,
 		ConnectionRetries: 3,
 		IdleTimeout:       time.Duration(300) * time.Second}
 	quicSession             quic.Session
@@ -126,40 +126,20 @@ func handleTCPConn(tcpConn net.Conn) {
 	sessionHeader := shared.QpepHeader{SourceAddr: tcpConn.RemoteAddr().(*net.TCPAddr), DestAddr: tcpConn.LocalAddr().(*net.TCPAddr)}
 	quicStream.Write(sessionHeader.ToBytes())
 
-	//This internal function just copies data from one stream to another until it's empty
-	/*streamConn := func(dst io.WriteCloser, src io.Reader, dir string) {
-		//copyBuf := make([]byte, 5000)
-		_, err := io.CopyBuffer(dst, src, nil)
-		dst.Close()
-		if err !=nil {
-			log.Printf("Client Error (%s): %s", dir, err)
-		}
-		streamWait.Done()
-		//Close this writer
-	}*/
-
-	streamQUICtoTCP := func(dst net.Conn, src quic.Stream) {
-		//fancyCopy(dst, src, streamWait)
-		//copyBuf := make([]byte, 1000)
+	streamQUICtoTCP := func(dst *net.TCPConn, src quic.Stream) {
 		_, err := io.Copy(dst, src)
-		//fancyCopy(dst, src, streamWait)
+		dst.SetLinger(3)
 		dst.Close()
-		src.CancelRead(1)
-		src.Close()
 		if err != nil {
 			log.Printf("Error on Copy %s", err)
 		}
 		streamWait.Done()
 	}
 
-	streamTCPtoQUIC := func(dst quic.Stream, src net.Conn) {
-		//fancyCopy(dst, src, streamWait)
-		//copyBuf := make([]byte, 1000)
+	streamTCPtoQUIC := func(dst quic.Stream, src *net.TCPConn) {
 		_, err := io.Copy(dst, src)
-		//fancyCopy(dst, src, streamWait)
+		src.SetLinger(3)
 		src.Close()
-		dst.CancelWrite(1)
-		dst.Close()
 		if err != nil {
 			log.Printf("Error on Copy %s", err)
 		}
@@ -167,8 +147,8 @@ func handleTCPConn(tcpConn net.Conn) {
 	}
 
 	//Proxy all stream content from quic to TCP and from TCP to quic
-	go streamTCPtoQUIC(quicStream, tcpConn)
-	go streamQUICtoTCP(tcpConn, quicStream)
+	go streamTCPtoQUIC(quicStream, tcpConn.(*net.TCPConn))
+	go streamQUICtoTCP(tcpConn.(*net.TCPConn), quicStream)
 
 	//we exit (and close the TCP connection) once both streams are done copying
 	streamWait.Wait()
