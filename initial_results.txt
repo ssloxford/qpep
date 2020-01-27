@@ -1,0 +1,72 @@
+Bundling Test: {'0': {'sent_bps': 2419300.0, 'received_bps': 843090}, '5': {'sent_bps': 1952160.0, 'received_bps': 796970}, '10': {'sent_bps': 1948260.0, 'received_bps': 765161}, '15': {'sent_bps': 2519220.0, 'received_bps': 853390}, '20': {'sent_bps': 1329190.0, 'received_bps': 769992}, '25': {'sent_bps': 2233980.0, 'received_bps': 813586}, '30': {'sent_bps': 1945370.0, 'received_bps': 735935}, '35': {'sent_bps': 1962790.0, 'received_bps': 838925}, '40': {'sent_bps': 1962770.0, 'received_bps': 869033}, '45': {'sent_bps': 2014910.0, 'received_bps': 843815}, '50': {'sent_bps': 2459010.0, 'received_bps': 798438}, '55': {'sent_bps': 2574920.0, 'received_bps': 832114}, '60': {'sent_bps': 1998800.0, 'received_bps': 632870}, '65': {'sent_bps': 1598020.0, 'received_bps': 667989}, '70': {'sent_bps': 1450850.0, 'received_bps': 832099}, '75': {'sent_bps': 1962730.0, 'received_bps': 851409}, '80': {'sent_bps': 2067020.0, 'received_bps': 734809}, '85': {'sent_bps': 1386010.0, 'received_bps': 862437}, '90': {'sent_bps': 2176940.0, 'received_bps': 797032}, '95': {'sent_bps': 2234000.0, 'received_bps': 806738}}
+Decimation Test:
+
+
+Reverse IPerf:
+Plain: 1.3/12.5
+OVPN: 7.6/6.6
+PEPSAL: 23.9/17.8
+QPEP: 22/15.4
+
+{
+	'plain': {
+		'sent_bytes': 17325504,
+		'sent_bps': 13860300.0,
+		'received_bytes': 15736504,
+		'received_bps': 12589100.0
+	},
+	'ovpn': {
+		'sent_bytes': 9518758,
+		'sent_bps': 7614880.0,
+		'received_bytes': 8326658,
+		'received_bps': 6661220.0
+	},
+	'pepsal': {
+		'sent_bytes': 29957840,
+		'sent_bps': 23966000.0,
+		'received_bytes': 22254976,
+		'received_bps': 17803800.0
+	},
+	'qpep': {
+		'sent_bytes': 27525120,
+		'sent_bps': 22019800.0,
+		'received_bytes': 19270038,
+		'received_bps': 15415800.0
+	}
+}
+
+IPERF3 10MB Download:
+plain : 12.023 / 11.303
+ovpn : 8.098 / 7.471
+pepsal : 11.757 / 6.489
+qpep : 24.003 / 13.97
+
+
+
+IPERF FULL TEST
+
+plain0mb :  4.029 / 1.65
+plain1mb :  2.233 / 1.561
+plain10mb :  7.116 / 6.278
+plain100mb :  14.264 / 14.053
+
+ovpn0mb :  1.171 / 1.076
+ovpn1mb :  1.497 / 1.326
+ovpn10mb :  6.902 / 6.086
+ovpn100mb :  13.909 / 13.791
+
+pepsal0mb :  9.751 / 1.652
+pepsal1mb :  12.253 / 2.11
+pepsal10mb :  19.463 / 11.146
+pepsal100mb :  15.154 / 14.026
+
+qpep0mb :  874.102 / 69.742
+qpep1mb :  98.275 / 19.356
+qpep10mb :  32.769 / 20.444
+qpep100mb :  22.005 / 20.518
+
+[SINGLE STREAMED]
+qpep0mb :  78.816 / 3.649
+qpep1mb :  30.314 / 6.352
+qpep10mb :  25.564 / 14.893
+qpep100mb :  16.801 / 15.608
