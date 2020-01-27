@@ -202,6 +202,7 @@ No special routing setup is required for the QPEP server. It listens by default 
 ```bash
 $ sysctl -w net.ipv4.ip_forward=1
 ```
+## Running QPEP
 ### Launching the QPEP Client
 To run QPEP in client mode once you've set the appropriate IP tables rules:
 ```bash
