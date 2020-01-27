@@ -245,9 +245,9 @@ There are a few issues / next steps which would make sense to implement if you'd
 * Improvements to QUIC for the satellite environment are also welcome. Especially changes such as FEC implementation and adjustments to the congestion control configurations.
 # Citation and References
 ## Authors
-This code was written by James Pavur. 
+The code in the src/ directory and the opensand-testbed/ directory was written by James Pavur. It is part of a larger research initiative on satellite communications security conducted in partnership between the University of Oxford's [Systems Security Lab](https://www.cybersecurity.ox.ac.uk/) and armasuisse's [Cyber-Defense Campus](https://www.ar.admin.ch/en/armasuisse-wissenschaft-und-technologie-w-t/cyber-defence_campus.html).
 
-It is part of a larger research initiative on satellite communications security conducted in partnership between the University of Oxford's [Systems Security Lab](https://www.cybersecurity.ox.ac.uk/) and armasuisse's [Cyber-Defense Campus](https://www.ar.admin.ch/en/armasuisse-wissenschaft-und-technologie-w-t/cyber-defence_campus.html).
+Various other benchmarking tools and libraries have authorship and license information in their respective directories.
 
 ## References in Publications 
 QPEP and the corresponding testbed were both designed to encourage academic research into secure and performant satellite communications. We would be thrilled to learn about projects you're working on academically or in industry which build on QPEP's contribution!
