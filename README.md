@@ -1,15 +1,37 @@
-# QPEP
+# QPEP: An Encrypted QUIC-Based Performance Enhancing Proxy for Modern Satcoms
+![QPEP Network Diagram](qpep_overview.svg)
 
 QPEP is an encrypted performance enhancing proxy designed to protect high-latency satellite connections without TCP performance degradation. QPEP leverages a QUIC-tunnel to encapsulate TCP traffic over the satellite hop and de-encapsulate it on an internet connected server.
 
 In conjunction with QPEP, this repository also contains a dockerized testbed based on the OpenSAND satellite networking simulation engine. Built into this testbed are pre-configured installations of QPEP and other comparable technologies for benchmarking and experimentation.
 
-## Getting Started
+# Table of Contents
+- [QPEP: An Encrypted QUIC-Based Performance Enhancing Proxy for Modern Satcoms](#qpep--an-encrypted-quic-based-performance-enhancing-proxy-for-modern-satcoms)
+- [TOC](#toc)
+- [Getting Started](#getting-started)
+  * [Prerequisites](#prerequisites)
+  * [Installing](#installing)
+- [Using the Testbed](#using-the-testbed)
+  * [Simple Browsing](#simple-browsing)
+  * [Benchmarking](#benchmarking)
+    + [Example: Testing Page Load Times with Browsertime](#example--testing-page-load-times-with-browsertime)
+  * [Doing Other Stuff](#doing-other-stuff)
+- [Using Standalone QPEP](#using-standalone-qpep)
+    + [Client Setup](#client-setup)
+    + [Server Setup](#server-setup)
+    + [Launching the QPEP Client](#launching-the-qpep-client)
+    + [Launching the QPEP Server](#launching-the-qpep-server)
+    + [Changing Further QUIC Parameters](#changing-further-quic-parameters)
+- [Contributing](#contributing)
+- [Citation and References](#citation-and-references)
+  * [Authors](#authors)
+  * [References in Publications](#references-in-publications)
+  * [License](#license)
+  * [Acknowledgments](#acknowledgments)
+# Getting Started
 These instructions will help you get QPEP configured and running inside the dockerized testbed. The QPEP testbed has been extensively tested on Windows 10 Professional Edition (with Hyper-V & Docker) but will likely cooperate on *nix systems as well.
 
-:warning: Disclaimer: While it is possible to configure and run QPEP outside of the testbed environment, this is discouraged for anything other than experimental testing. The current release of QPEP is a proof-of-concept research tool and, while every effort has been made to make it secure and reliable, it has not been vetted sufficiently for its use in critical satellite communications. Commercial use of this code is not only forbidden under the terms of its license, but would also be exceptionally foolhardy. When QPEP reaches a more mature state, this disclaimer will be updated.
-
-### Prerequisites
+## Prerequisites
 Ensure that you have all of the following prerequisites on your machine:
 * [Docker & Docker-Compose](https://docs.docker.com/compose/install/) (_tested on Docker Desktop for Windows (v2.2.0), Engine (v1.25.2), Compose (v1.25.2)_)
 * Python 3.7+
@@ -17,7 +39,7 @@ Ensure that you have all of the following prerequisites on your machine:
 * An XServer for the OpenSAND GUI (e.g. [VcXsrv](https://sourceforge.net/projects/vcxsrv/) for Windows)
 * git
 
-### Installing
+## Installing
 These instructions are for Docker on Windows. *nix systems should be essentially the same except that setting up the XServer may require a different approach (for example, see [this guide](https://medium.com/@SaravSun/running-gui-applications-inside-docker-containers-83d65c0db110) for Ubuntu).
 
 First, create a new directory and clone this github repository into it.
@@ -50,8 +72,8 @@ The first time you run this, it may take a while to build the docker containers.
 
 **Note:** If the script freezes at the message "Starting Opensand Platform" for more than a minute or two this is almost always a result of the docker container being unable to connect to an XServer. OpenSAND requires a GUI and fails silently without one. Double-check that you have set your XServer options correctly and run the python script again.
 
-## Using the Testbed
-### Simple Browsing
+# Using the Testbed
+## Simple Browsing
 The provided browser_examples.py python script allows you to open a quipzilla browser instance connected to the satellite customer terminal and visit real-world websites over a simulated satellite connection. You can test several different scenarios. 
 
 To change from a GEO latency simulation to a LEO variable latency simulation use the orbit flag:
@@ -89,10 +111,10 @@ optional arguments:
   --wireshark           Add this flag to launch a wireshark instance on the
                         simulated satellite.
 ```
-### Benchmarking
+## Benchmarking
 The provided testbed also comes with support for writing and running custom benchmarking scenarios in python. Examples of many of these scenarios - including more complicated ones - can be found in the file ```simulation_examples.py```
 
-#### Example: Testing Page Load Times with Browsertime
+### Example: Testing Page Load Times with Browsertime
 This example shows how to compare page load times between QPEP and a network with no performance enhancing proxy installed. A similar approach should work for most benchmarks and scenarios included in the testbed.
 
 First, you will need to import a testbed from ```testbeds.py```, any scenarios (proxies, VPNs, etc) you wish to test from ```scenarios.py```, and any benchmarks from ```benchmarks.py```:
@@ -129,7 +151,7 @@ You can easily access the benchmark results programmatically or have them print 
 plain_scenario.benchmarks[0].results # scenario has a list of benchmarks with a results dictionary property
 qpep_scenario.print_results() # you can also print a formatted summary of all benchmarks to the console directly
 ``` 
-### Doing Other Stuff
+## Doing Other Stuff
 The provided python scripts (especially ```simulation_examples.py```) provide many examples of the sort of things you can do within the QPEP testbed. However if you wish to do more, you can always directly access the docker containers within a scenario context. The following containers are available:
 * ```satellite``` The satellite itself. Has Wireshark installed and GUI support so you can easily inspect traffic on the ```opensand_tun``` interface and see how it is encapsulated/encrypted over-the-air. You can also launch wireshark from python with ```testbed.launch_wireshark()```
 * ```gateway``` The satellite groundstation. Can either route traffic to/from other docker-containers (e.g. ```ws-gw```, the gateway workstation) on a simulated LAN or to the real internet.
@@ -153,14 +175,121 @@ plain_scenario.deploy_scenario()
 > docker-compose exec ws-st bash
 $ wget https://www.google.com 
 ```
-**Note:** One thing which can cause trouble is stopping the OpenSAND scenario once it has launched. This breaks the ip-routes between containers in the network, causing traffic to be unroutable in some cases - even after you restart the scenario. Most of the time running ```scenario.deploy_scenario(testbed_up=True)``` is sufficient to fix this. However, PEPsal takes over network routes at a lower level and can prevent the py-docker library from communicated with containers. See the ```attenuation_test_pepsal_scenario``` method in ```simulation_examples.py``` for an example of how to run PEPsal under custom OpenSAND conditions programmtically.  
+**Note:** One thing which can cause trouble is stopping the OpenSAND scenario once it has launched. This breaks the ip routes between containers in the network, causing traffic to be unroutable in some cases - even after you restart the scenario. Most of the time running ```scenario.deploy_scenario(testbed_up=True)``` is sufficient to fix this. However, PEPsal takes over network routes at a lower level and can prevent the py-docker library from communicating with containers. See the ```attenuation_test_pepsal_scenario``` method in ```simulation_examples.py``` for an example of how to run PEPsal under custom OpenSAND conditions programmatically.  
 
-## Built With
+# Using Standalone QPEP
+ 
+>:warning: **Disclaimer**: While it is possible to configure and run QPEP outside of the testbed environment, this is discouraged for anything other than experimental testing. The current release of QPEP is a proof-of-concept research tool and, while every effort has been made to make it secure and reliable, it has not been vetted sufficiently for its use in critical satellite communications. Commercial use of this code in its current state would be **exceptionally foolhardy**. When QPEP reaches a more mature state, this disclaimer will be updated.
 
-## Contributing
+##Setting Up The Network
+The testbed comes with a pre-built and pre-configured QPEP deployment. However, if you wish to use QPEP outside of the test bed this is possible.
 
+You will need at least two machines and ideally three, a QPEP client and a QPEP server are required and a client workstation is optional but recommended. The QPEP client must be able to talk to the QPEP server (e.g. must be able to ping it / initiate UDP connections to open ports on the QPEP server). The client workstation must be configured to route all TCP traffic through the QPEP client.
+
+If you wish to route traffic bi-directionally (e.g. correctly optimize incoming ssh connections to the QPEP client workstation from the internet) you will need to run a QPEP client and a QPEP server on both sides of the connection.
+
+### Client Setup
+The client must be configured to route all incoming TCP traffic to the QPEP server. In *nix systems you can do this using iptables. QPEP by default is configured to accept incoming client connections on port 8080
+```bash
+$ sysctl -w net.ipv4.ip_forward=1
+$ iptables -A PREROUTING -t mangle -p tcp -i [network interface to server] -j TPROXY --on-port 8080 --tproxy-mark 1
+$ iptables -A PREROUTING -t mangle -p tcp -i [network interface to workstation] -j TPROXY --on-port 8080 --tproxy-mark 1
+$ ip rule add fwmark 1 lookup 100
+$ ip route add local 0.0.0.0/0 dev lo table 100
+```
+### Server Setup
+No special routing setup is required for the QPEP server. It listens by default on UDP port 4242. If you would like, you can enable ip forwarding which, depending on the underlying network implementation, may allow for fully transparent proxy implementation.
+```bash
+$ sysctl -w net.ipv4.ip_forward=1
+```
+### Launching the QPEP Client
+To run QPEP in client mode once you've set the appropriate IP tables rules:
+```bash
+$ ./qpep -client -gateway [IP of QPEP server]
+```
+### Launching the QPEP Server
+To run QPEP in server mode
+```bash
+$ ./qpep
+```
+### Changing Further QUIC Parameters
+QPEP comes with a forked and modified version of the quic-go library which allows for altering some basic constants in the default QUIC implementation. These are provided as command-line flags and can be implemented on both the QPEP server and QPEP client. You can use ```qpep -h``` to see basic help output. The available options are:
+* ```-acks [int]``` Sets the number of ack-eliciting packets per ack
+* ```-congestion [int]``` Sets the size of the initial QUIC congestion window in number of QUIC packets
+* ```-decimate [int]``` Sets the denominantor of the ACK decimation ratio (e.g. 4 for 1/4 RTT)
+
+# Contributing
+Contributions are very much welcome. Just make a pull request and reference any relevant issues in the github by issue number so I can review it.
+
+##Building from Source
+Build from source should be simple if you have a working go environment. While QPEP can build on windows / OSX systems it has been tested on neither and linux x64 is recommended for development.
+
+```bash
+$ git clone https://github.com/pavja2/qpep
+$ cd qpep
+$ go build
+$ ./qpep
+```
+
+The testbed is also configured to automatically update QPEP from the src directory to the /root/go/src directory on the container instance. This means you can avoid building from scratch and test your own edits by simply re-launching the QPEP client within the testbed whenever you make a change.
+You can do this either from within the python interpreter with ```scenario.deploy_scenario()``` or by connecting to the containers with bash and running ```go run /root/go/src/qpep/main.go``` if you want direct access to debugging output.
+ 
+##Known Issues / Future Steps
+There are a few issues / next steps which would make sense to implement if you'd like to make a contribution but aren't sure what's needed. Specifically:
+* More benchmarks for the testbed environment are welcome - especially realistic ones reflective of actual web-browsing behavior over satllite links.
+* QPEP should have better support for setting TLS parameters in the QPEP server and client configuration.
+* While QPEP in theory supports IPv6, it has not been tested as the testbed has not been configured for IPv6 networking
+* QPEP does not yet tunnel UDP/ICMP traffic.
+* Running a QPEP client on the client workstation should be possible but the network setup/iptables process is a little complex. Scripts to configure the testbed for this scenario would be helpful.
+* Improvements to QUIC for the satellite environment are also welcome. Especially changes such as FEC implementation and adjustments to the congestion control configurations.
+# Citation and References
 ## Authors
+This code was written by James Pavur. 
 
+It is part of a larger research initiative on satellite communications security conducted in partnership between the University of Oxford's [Systems Security Lab](https://www.cybersecurity.ox.ac.uk/) and armasuisse's [Cyber-Defense Campus](https://www.ar.admin.ch/en/armasuisse-wissenschaft-und-technologie-w-t/cyber-defence_campus.html).
+
+## References in Publications 
+QPEP and the corresponding testbed were both designed to encourage academic research into secure and performant satellite communications. We would be thrilled to learn about projects you're working on academically or in industry which build on QPEP's contribution!
+
+If you use QPEP or something based on it, please cite the conference paper which introduces QPEP:
+> Paper currently under peer-review. In the interim, you can cite as software:
+>
+> Pavur, James. QPEP (version 0.1). Go. Oxford University, 2020. https://www.github.com/pavja2/qpep.
+>
 ## License
+The Clear BSD License
+
+Copyright (c) 2020 James Pavur.
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the disclaimer
+below) provided that the following conditions are met:
+
+     * Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+     * Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+     * Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from this
+     software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 ## Acknowledgments
+[OpenSAND](https://opensand.org/content/home.php) and the [Net4Sat](https://www.net4sat.org/content/home.php) project have been instrumental in making it possible to develop realistic networking simulations for satellite systems.
