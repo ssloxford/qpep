@@ -6,8 +6,6 @@ QPEP is an encrypted performance enhancing proxy designed to protect high-latenc
 In conjunction with QPEP, this repository also contains a dockerized testbed based on the OpenSAND satellite networking simulation engine. Built into this testbed are pre-configured installations of QPEP and other comparable technologies for benchmarking and experimentation.
 
 # Table of Contents
-- [QPEP: An Encrypted QUIC-Based Performance Enhancing Proxy for Modern Satcoms](#qpep--an-encrypted-quic-based-performance-enhancing-proxy-for-modern-satcoms)
-- [TOC](#toc)
 - [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Installing](#installing)
