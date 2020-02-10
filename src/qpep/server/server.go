@@ -25,7 +25,6 @@ var (
 	serverConfig = ServerConfig{ListenHost: "0.0.0.0", ListenPort: 4242}
 	quicListener quic.Listener
 	quicSession  quic.Session
-	streams      []quic.Stream
 )
 
 type ServerConfig struct {

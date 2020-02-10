@@ -30,11 +30,13 @@ class Scenario(ABC):
 
 class PlainScenario(Scenario):
     def deploy_scenario(self, testbed_up=False):
-        super().deploy_scenario()
+        if not testbed_up:
+            super().deploy_scenario()
 
 class OpenVPNScenario(Scenario):
     def deploy_scenario(self, testbed_up=False):
-        super().deploy_scenario()
+        if not testbed_up:
+            super().deploy_scenario()
         docker_client = docker.from_env()
         terminal_workstation = docker_client.containers.get("ws-st")
         # Satellite latency means that it takes OpenVPN a long time to establish the connection, waiting is easiest
@@ -43,8 +45,14 @@ class OpenVPNScenario(Scenario):
         time.sleep(20)
 
 class QPEPScenario(Scenario):
+
+    def __init__(self, name, testbed, benchmarks, multi_stream=True):
+        self.multi_stream = multi_stream
+        super().__init__(name, testbed, benchmarks)
+
     def deploy_scenario(self, testbed_up=False):
-        super().deploy_scenario()
+        if not testbed_up:
+            super().deploy_scenario()
         docker_client = docker.from_env()
 
         logger.debug("Configuring Client Side of QPEP Proxy")
@@ -55,8 +63,14 @@ class QPEPScenario(Scenario):
         gateway_workstation = docker_client.containers.get("ws-gw")
         gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
 
+        if testbed_up:
+            # kill running QPEP services for fresh start
+            gateway_workstation.exec_run("pkill -9 main")
+            terminal_container.exec_run("pkill -9 main")
+
         logger.debug("Launching QPEP Client")
-        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9", detach=True)
+        #terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -multistream " + str(self.multi_stream).lower(), detach=True)
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 ", detach=True)
         logger.debug("Launching QPEP Gateway")
         gateway_workstation.exec_run("go run /root/go/src/qpep/main.go", detach=True)
         logger.success("QPEP Running")
@@ -82,9 +96,9 @@ class QPEPAckScenario(Scenario):
             gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
 
         logger.debug("Launching QPEP Client")
-        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -decimate " + str(ack_level), detach=True)
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -acks " + str(ack_level), detach=True)
         logger.debug("Launching QPEP Gateway")
-        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -decimate " + str(ack_level), detach=True)
+        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -acks " + str(ack_level), detach=True)
         logger.success("QPEP Running")
 
 

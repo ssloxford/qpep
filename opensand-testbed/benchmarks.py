@@ -53,7 +53,10 @@ class IperfBenchmark(Benchmark):
 
     def run(self):
         for file_size in self.file_sizes:
-            self.results["iperf_" + str(round(file_size/1000000, 3)) + "mb"] = self.run_iperf_test(file_size, self.reset_on_run)
+            if ("iperf_" + str(round(file_size/1000000, 3)) + "mb") not in self.results:
+                self.results["iperf_" + str(round(file_size/1000000, 3)) + "mb"] = self.run_iperf_test(file_size, self.reset_on_run)
+            else:
+                self.results["iperf_" + str(round(file_size / 1000000, 3)) + "mb" + str(len(self.results))] = self.run_iperf_test(file_size, self.reset_on_run)
 
     def run_iperf_test(self, transfer_bytes, reset_on_run):
         logger.debug("Starting iperf server")
@@ -68,7 +71,7 @@ class IperfBenchmark(Benchmark):
         if reset_on_run:
             terminal_workstation.exec_run("pkill -9 iperf3")
             time.sleep(1)
-        exit_code, output = terminal_workstation.exec_run("iperf3 -c 172.22.0.9 -R --json -n " + str(transfer_bytes))
+        exit_code, output = terminal_workstation.exec_run("iperf3 --no-delay -c 172.22.0.9 -R --json -n " + str(transfer_bytes))
         json_string = output.decode('unicode_escape').rstrip('\n').replace('Linux\n', 'Linux') # there's an error in iperf3's json output here
         test_result = json.loads(json_string)
         if "error - control socket has closed unexpectedly" in json_string:
@@ -99,9 +102,10 @@ class IperfBenchmark(Benchmark):
         }
 
 class SitespeedBenchmark(Benchmark):
-    def __init__(self, hosts=alexa_top_20, iterations=1):
+    def __init__(self, hosts=alexa_top_20, iterations=1, average_only=True):
         self.hosts = hosts
         self.iterations = iterations
+        self.average_only = average_only
         super().__init__(name="SiteSpeed")
         self.results = []
         self.errors = 0
@@ -118,18 +122,23 @@ class SitespeedBenchmark(Benchmark):
         host_string = ''
         for host in self.hosts:
             host_string = host + " "
-            host_result = terminal_workstation.exec_run('/usr/src/app/bin/browsertime.js -n ' + str(self.iterations) +' --headless --video false --visualElements false ' + str(host_string))
-            matches = re.findall('Load: ([0-9.]+)([ms])', str(host_result))
-            print(host_result)
+            host_result = terminal_workstation.exec_run('/usr/src/app/bin/browsertime.js -n ' + str(self.iterations) +' --headless --video=false --visualMetrics=false --visualElements=false ' + str(host_string))
+            if self.average_only:
+                matches = re.findall('Load: ([0-9.]+)([ms])', str(host_result))
+                for match in matches:
+                    # if the connection measures in milliseconds we take as is, otherwise convert
+                    if match[1] == 'm':
+                        self.results.append(float(match[0]))
+                    elif match[1] == 's':
+                        self.results.append(float(match[0]) * 1000)
+                    logger.debug(host_string +" " + str(match[0]))
+            else:
+                matches = re.findall('PageLoadTime: ([0-9]+)', str(host_result))
+                for match in matches:
+                    self.results.append(float(match))
             if len(matches) == 0:
                 logger.warning("No browsertime measurement for " + str(host_string))
                 print(host_result)
-            for match in matches:
-                # if the connection measures in milliseconds we take as is, otherwise convert
-                if match[1] == 'm':
-                    self.results.append(float(match[0]))
-                elif match[1] == 's':
-                    self.results.append(float(match[0])*1000)
                 logger.debug("Browsertime: " + str(host_string) + " " + str(match[0]) + str(match[1]))
             #count failed connections for host
             error_matches = re.findall('UrlLoadError', str(host_result))

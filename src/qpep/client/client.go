@@ -19,15 +19,14 @@ var (
 	proxyListener       net.Listener
 	ClientConfiguration = ClientConfig{ListenHost: "0.0.0.0", ListenPort: 8080,
 		GatewayHost: "198.18.0.254", GatewayPort: 4242,
-		QuicStreamTimeout: 2, MultiStream: true,
+		QuicStreamTimeout: 2, MultiStream: shared.QuicConfiguration.MultiStream,
 		ConnectionRetries: 3,
 		IdleTimeout:       time.Duration(300) * time.Second}
 	quicSession             quic.Session
 	QuicClientConfiguration = quic.Config{
 		IdleTimeout:        time.Duration(300) * time.Second,
-		ConnectionIDLength: 8,
+		MaxIncomingStreams: 40000,
 	}
-	streams []quic.Stream
 )
 
 type ClientConfig struct {
@@ -125,11 +124,14 @@ func handleTCPConn(tcpConn net.Conn) {
 	//Set our custom header to the QUIC session so the server can generate the correct TCP handshake on the other side
 	sessionHeader := shared.QpepHeader{SourceAddr: tcpConn.RemoteAddr().(*net.TCPAddr), DestAddr: tcpConn.LocalAddr().(*net.TCPAddr)}
 	quicStream.Write(sessionHeader.ToBytes())
+	log.Printf("Sent QUIC header to server")
 
 	streamQUICtoTCP := func(dst *net.TCPConn, src quic.Stream) {
 		_, err := io.Copy(dst, src)
 		dst.SetLinger(3)
 		dst.Close()
+		//src.CancelRead(1)
+		//src.Close()
 		if err != nil {
 			log.Printf("Error on Copy %s", err)
 		}
@@ -140,6 +142,9 @@ func handleTCPConn(tcpConn net.Conn) {
 		_, err := io.Copy(dst, src)
 		src.SetLinger(3)
 		src.Close()
+		//src.CloseWrite()
+		//dst.CancelWrite(1)
+		//dst.Close()
 		if err != nil {
 			log.Printf("Error on Copy %s", err)
 		}

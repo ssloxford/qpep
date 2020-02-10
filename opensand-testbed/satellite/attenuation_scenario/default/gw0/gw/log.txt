@@ -1,104 +1,12 @@
-1579604643.739555 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+1580490921.341712 Status Blocks initialized
+1580490925.355839 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
 
-1579604643.739613 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+1580490926.266410 Spot_1.DVB.logon_request Logon request received from ST1 on spot 1
+1580490926.267930 Spot_1.DVB.logon_response Logon response send to ST1 on spot 1
+1580490933.669106 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
 
-1579604643.739642 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+1580490950.053553 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
 
-1579604643.739668 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
+1580490980.779209 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
 
-1579604643.739692 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.739716 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.739739 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.739762 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.739786 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.739809 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.739832 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742516 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742567 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742596 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742621 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742644 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742667 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742689 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742712 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742734 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742756 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742778 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742801 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742823 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742845 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742867 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742889 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742911 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742933 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742954 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742977 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.742999 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.743021 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.743920 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.743988 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744018 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744043 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744067 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744090 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744174 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744239 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744278 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744321 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.744358 LanAdaptation.SarpTable  [SarpTable.cpp:add():125] SARP table full or address is empry, cannot add entry
-
-1579604643.767833 Status Blocks initialized
-1579604647.877416 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
-
-1579604648.722318 Spot_1.DVB.logon_request Logon request received from ST1 on spot 1
-1579604648.723264 Spot_1.DVB.logon_response Logon response send to ST1 on spot 1
-1579604656.680173 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
-
-1579604673.961177 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
-
-1579604707.237734 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
-
-1579604778.925679 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
-
-1579604922.293776 Dvb.Scheduling  [ForwardSchedulingS2.cpp:getIncompleteBBFrame():786] encapsulation packet is for ST0 that is not registered
-
-1579605045.652032 Status Simulation stopped
+1580491006.872457 Status Simulation stopped

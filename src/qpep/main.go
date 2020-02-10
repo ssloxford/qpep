@@ -17,10 +17,12 @@ func main() {
 	ackDecimationFlag := flag.Int("decimate", 4, "Denominator of Ack Decimation Ratio")
 	congestionWindowFlag := flag.Int("congestion", 4, "Number of QUIC packets for initial congestion window")
 	gatewayFlag := flag.String("gateway", "198.18.0.254", "IP address of gateway running qpep")
+	multiStreamFlag := flag.Bool("multistream", true, "Enable multiplexed QUIC streams inside a single session")
 	flag.Parse()
 	shared.QuicConfiguration.AckElicitingPacketsBeforeAck = *ackElicitingFlag
 	shared.QuicConfiguration.AckDecimationDenominator = *ackDecimationFlag
 	shared.QuicConfiguration.InitialCongestionWindowPackets = *congestionWindowFlag
+	shared.QuicConfiguration.MultiStream = *multiStreamFlag
 	client.ClientConfiguration.GatewayHost = *gatewayFlag
 
 	if *clientFlag {
