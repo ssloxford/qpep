@@ -1,0 +1,30 @@
+[submodule "src/github.com/lucas-clemente/quic-go"]
+	path = src/github.com/lucas-clemente/quic-go
+	url = https://github.com/pavja2/quic-go
+[submodule "src/github.com/alangpierce/go-forceexport"]
+	path = src/github.com/alangpierce/go-forceexport
+	url = https://www.github.com/alangpierce/go-forceexport
+[submodule "src/github.com/cheekybits/genny"]
+	path = src/github.com/cheekybits/genny
+	url = https://www.github.com/cheekybits/genny
+[submodule "src/github.com/golang/mock"]
+	path = src/github.com/golang/mock
+	url = https://www.github.com/golang/mock
+[submodule "src/github.com/golang/protobuf"]
+	path = src/github.com/golang/protobuf
+	url = https://www.github.com/golang/protobuf
+[submodule "src/github.com/marten-seemann/chacha20"]
+	path = src/github.com/marten-seemann/chacha20
+	url = https://www.github.com/marten-seemann/chacha20
+[submodule "src/github.com/marten-seemann/qpack"]
+	path = src/github.com/marten-seemann/qpack
+	url = https://www.github.com/marten-seemann/qpack
+[submodule "src/github.com/marten-seemann/qtls"]
+	path = src/github.com/marten-seemann/qtls
+	url = https://www.github.com/marten-seemann/qtls
+[submodule "src/github.com/onsi/ginkgo"]
+	path = src/github.com/onsi/ginkgo
+	url = https://www.github.com/onsi/ginkgo
+[submodule "src/github.com/onsi/gomega"]
+	path = src/github.com/onsi/gomega
+	url = https://www.github.com/onsi/gomega
