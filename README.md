@@ -246,7 +246,6 @@ You can do this either from within the python interpreter with ```scenario.deplo
 ## Known Issues / Future Steps
 There are a few issues / next steps which would make sense to implement if you'd like to make a contribution but aren't sure what's needed. Specifically:
 * This only really works on Docker Desktop CE for Windows. While it may be possible to wrangle everything into a docker-compose setup for linux, it would be nice to make the XServer configuration more intuitive.
-* The docker deployment still requires building containers. Setting up a docker hub repository with a release may be good.
 * More benchmarks for the testbed environment are welcome - especially realistic ones reflective of actual web-browsing behavior over satllite links.
 * QPEP should have better support for setting TLS parameters in the QPEP server and client configuration.
 * While QPEP in theory supports IPv6, it has not been tested as the testbed has not been configured for IPv6 networking
