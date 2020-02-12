@@ -90,23 +90,23 @@ To test other encryption and PEP tools than QPEP, change the scenario. The follo
 For more configuration options and help use the ```-h``` flag:
 ```
 usage: browser_examples.py [-h] [--display DISPLAY]
-                           [--scenario {plain,qpep,pepsal_distributed,pepsal_integrated,open_vpn}]```
+                           [--scenario {plain,qpep,pepsal_distributed,pepsal_integrated,open_vpn}]
                            [--orbit {GEO,LEO}] [--wireshark]
                            xhost
 
 positional arguments:
   xhost                 The host IP address of an accessible XServer. Note:
-                        this must be accessible from within the docker testbed```
-                        (so localhost or 127.0.0.1 will not work).Give an example
+                        this must be accessible from within the docker testbed
+                        (so localhost or 127.0.0.1 will not work).
 
 optional arguments:
-  -h, --help            show this help message and exit### And coding style tests
+  -h, --help            show this help message and exit
   --display DISPLAY     The display number of an accessible XServer (default:
-                        0)Explain what these tests test and why
+                        0)
   --scenario {plain,qpep,pepsal_distributed,pepsal_integrated,open_vpn}
-                        The PEP scenario you wish to evaluate (default: plain)```
-  --orbit {GEO,LEO}     The orbit you want to simulate the satellite locationGive an example
-                        delay for (default: GEO)```
+                        The PEP scenario you wish to evaluate (default: plain)
+  --orbit {GEO,LEO}     The orbit you want to simulate the satellite location
+                        delay for (default: GEO)
   --wireshark           Add this flag to launch a wireshark instance on the
                         simulated satellite.
 ```
