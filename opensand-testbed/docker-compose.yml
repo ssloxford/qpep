@@ -2,7 +2,8 @@ version: '2.4'
 services:
   satellite:
     container_name: satellite
-    build: satellite/
+    image: pavja2/qpep:satellite
+    #build: satellite/
     ports:
       - "3141"
       - "5358"
@@ -23,7 +24,8 @@ services:
       - "terminal"
   gateway:
     container_name: gateway
-    build: gateway/
+    image: pavja2/qpep:gateway
+    #build: gateway/
     ports:
       - "3141"
       - "5358"
@@ -51,7 +53,8 @@ services:
       GOPATH: /root/go
   terminal:
     container_name: terminal
-    build: terminal/
+    image: pavja2/qpep:terminal
+    #build: terminal/
     ports:
       - "3141"
       - "5358"
@@ -79,7 +82,8 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
   ws-st:
     container_name: ws-st
-    build: ws-st/
+    image: pavja2/qpep:ws-st
+    #build: ws-st/
     networks:
       stlan:
         ipv4_address: "172.21.0.9"
@@ -94,7 +98,8 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
   ws-gw:
     container_name: ws-gw
-    build: ws-gw/
+    image: pavja2/qpep:ws-gw
+    #build: ws-gw/
     networks:
       gwlan:
         ipv4_address: "172.22.0.9"
@@ -108,7 +113,8 @@ services:
       - "./ws-gw/config:/opensand_config"
   ws-ovpn:
     container_name: ws-ovpn
-    build: ws-ovpn/
+    image: pavja2/qpep:ws-ovpn
+    #build: ws-ovpn/
     cap_add:
       - NET_ADMIN
     ports:
