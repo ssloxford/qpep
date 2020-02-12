@@ -12,7 +12,6 @@ In conjunction with QPEP, this repository also contains a dockerized testbed bas
 - [Using the Testbed](#using-the-testbed)
   * [Simple Browsing](#simple-browsing)
   * [Benchmarking](#benchmarking)
-    + [Example: Testing Page Load Times with Browsertime](#example--testing-page-load-times-with-browsertime)
   * [Doing Other Stuff](#doing-other-stuff)
 - [Using Standalone QPEP](#using-standalone-qpep)
     + [Client Setup](#client-setup)
@@ -21,6 +20,8 @@ In conjunction with QPEP, this repository also contains a dockerized testbed bas
     + [Launching the QPEP Server](#launching-the-qpep-server)
     + [Changing Further QUIC Parameters](#changing-further-quic-parameters)
 - [Contributing](#contributing)
+    + [Editing the Docker Testbed](#editing-the-docker-testbed)
+    + [Building from Source](#building-from-source)
 - [Citation and References](#citation-and-references)
   * [Authors](#authors)
   * [References in Publications](#references-in-publications)
@@ -222,7 +223,14 @@ QPEP comes with a forked and modified version of the quic-go library which allow
 # Contributing
 Contributions are very much welcome. Just make a pull request and reference any relevant issues in the github by issue number so I can review it.
 
-##Building from Source
+## Editing the Docker Testbed
+To reduce launch times, pre-built images are pulled in the docker-compose.yml file from the docker hub: https://hub.docker.com/repository/docker/pavja2/qpep
+
+However, if you wish to modify the docker testbed, for example to add more terminal workstations or run more complicated scenarios you can simply comment out all of the lines which begin with ```image:``` in the opensand-testbed/docker-compose.yml and remove the comments from the lines which begin with ```build:```. After this a ```docker-compose build``` command run from the opensand-testbed directory should re-build the containers based on the contents of this repository. 
+
+Dockerfiles for each container and other startup scripts and configurations can be found in sub-directories within opensand-testbed/ which are named after the respective container. For example, everything you need to build the satellite container can be found in opensand-testbed/satellite/. 
+
+## Building from Source
 Build from source should be simple if you have a working go environment. While QPEP can build on windows / OSX systems it has been tested on neither and linux x64 is recommended for development.
 
 ```bash
