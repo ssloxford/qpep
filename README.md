@@ -255,7 +255,7 @@ Various other benchmarking tools and libraries have authorship and license infor
 QPEP and the corresponding testbed were both designed to encourage academic research into secure and performant satellite communications. We would be thrilled to learn about projects you're working on academically or in industry which build on QPEP's contribution!
 
 If you use QPEP or something based on it, please cite the conference paper which introduces QPEP:
-> Paper currently under peer-review. In the interim, you can cite as software:
+> Paper currently under peer-review and pre-print is waiting for arXiv approval. In the interim, you can cite as software:
 >
 > Pavur, James. QPEP (version 0.1). Go. Oxford University, 2020. https://www.github.com/pavja2/qpep.
 >
