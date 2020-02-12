@@ -297,4 +297,4 @@ POSSIBILITY OF SUCH DAMAGE.
 ## Acknowledgments
 [OpenSAND](https://opensand.org/content/home.php) and the [Net4Sat](https://www.net4sat.org/content/home.php) project have been instrumental in making it possible to develop realistic networking simulations for satellite systems.
 
-This project would not have been possible without the incredible libraries developed by the Go community. These libraries are linked as submodules in this git repository. We're especially gratefull to the [quic-go](https://github.com/lucas-clemente/quic-go) project.
+This project would not have been possible without the incredible libraries developed by the Go community. These libraries are linked as submodules in this git repository. We're especially grateful to the [quic-go](https://github.com/lucas-clemente/quic-go) project.
