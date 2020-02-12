@@ -66,7 +66,7 @@ Finally, enter the opensand-testbed directory and run "browser_examples.py." You
 cd C:\qpep\qpep\opensand-testbed
 python browser_examples.py --scenario qpep [HOST_IP]
 ```
-The first time you run this, it may take a while to build the docker containers. Eventually, the OpenSAND GUI and a web-browser connected to the satellite network will launch. Congrats! You are now connected to a simulated encrypted satellite network. 
+The first time you run this, it may take a while to build the docker containers. The docker build took approximately 30 minutes on an Azure Windows 10 VM with 2 cpu cores and 8GB of RAM, however build times are very hardware/network dependent. Eventually, the OpenSAND GUI and a web-browser connected to the satellite network will launch. Congrats! You are now connected to a simulated encrypted satellite network. 
 
 **Note:** If the script freezes at the message "Starting Opensand Platform" for more than a minute or two this is almost always a result of the docker container being unable to connect to an XServer. OpenSAND requires a GUI and fails silently without one. Double-check that you have set your XServer options correctly and run the python script again.
 
@@ -235,8 +235,10 @@ $ ./qpep
 The testbed is also configured to automatically update QPEP from the src directory to the /root/go/src directory on the container instance. This means you can avoid building from scratch and test your own edits by simply re-launching the QPEP client within the testbed whenever you make a change.
 You can do this either from within the python interpreter with ```scenario.deploy_scenario()``` or by connecting to the containers with bash and running ```go run /root/go/src/qpep/main.go``` if you want direct access to debugging output.
  
-##Known Issues / Future Steps
+## Known Issues / Future Steps
 There are a few issues / next steps which would make sense to implement if you'd like to make a contribution but aren't sure what's needed. Specifically:
+* This only really works on Docker Desktop CE for Windows. While it may be possible to wrangle everything into a docker-compose setup for linux, it would be nice to make the XServer configuration more intuitive.
+* The docker deployment still requires building containers. Setting up a docker hub repository with a release may be good.
 * More benchmarks for the testbed environment are welcome - especially realistic ones reflective of actual web-browsing behavior over satllite links.
 * QPEP should have better support for setting TLS parameters in the QPEP server and client configuration.
 * While QPEP in theory supports IPv6, it has not been tested as the testbed has not been configured for IPv6 networking
