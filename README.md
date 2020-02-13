@@ -262,10 +262,10 @@ Various other benchmarking tools and libraries have authorship and license infor
 QPEP and the corresponding testbed were both designed to encourage academic research into secure and performant satellite communications. We would be thrilled to learn about projects you're working on academically or in industry which build on QPEP's contribution!
 
 If you use QPEP or something based on it, please cite the conference paper which introduces QPEP:
-> Paper currently under peer-review and pre-print is waiting for arXiv approval. In the interim, you can cite as software:
+> Paper currently under peer-review. In the interim, please cite our pre-print from arXiv:
 >
-> Pavur, James. QPEP (version 0.1). Go. Oxford University, 2020. https://www.github.com/pavja2/qpep.
->
+> Pavur, James, Martin Strohmeier, Vincent Lenders, and Ivan Martinovic. “QPEP: A QUIC-Based Approach to Encrypted Performance Enhancing Proxies for High-Latency Satellite Broadband.” ArXiv:2002.05091, February 12, 2020. [http://arxiv.org/abs/2002.05091](http://arxiv.org/abs/2002.05091).
+
 ## License
 The Clear BSD License
 
