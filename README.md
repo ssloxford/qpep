@@ -1,5 +1,5 @@
 # QPEP: An Encrypted QUIC-Based Performance Enhancing Proxy for Modern Satcoms
-![QPEP Network Diagram](qpep_overview.svg)
+![QPEP Network Diagram](qpep_overview.svg) 
 
 QPEP is an encrypted performance enhancing proxy designed to protect high-latency satellite connections without TCP performance degradation. QPEP leverages a QUIC-tunnel to encapsulate TCP traffic over the satellite hop and de-encapsulate it on an internet connected server.
 
