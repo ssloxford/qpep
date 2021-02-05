@@ -1,31 +1,32 @@
 version: '2.4'
 services:
   satellite:
-    container_name: satellite
-    image: pavja2/qpep:satellite
-    #build: satellite/
+    container_name: ${SAT_CONTAINER_NAME:-satellite}
+    #image: pavja2/qpep:satellite
+    build: satellite/
     ports:
       - "3141"
       - "5358"
       - "5926"
-      - "5656:5656"
+      - "${SAT_PORT_NUMBER:-5656}:5656"
     volumes:
       - ./satellite/config:/opensand_config
       - ./satellite/attenuation_scenario:/attenuation_scenario
       - ./satellite/delay_scenario:/delay_scenario
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     networks:
       emulation:
-        ipv4_address: 172.20.0.2
+        ipv4_address: ${EMU_NETWORK_HEAD:-172.20}.0.2
     privileged: true
     environment:
-      DISPLAY:
+      DISPLAY: :1
     depends_on:
       - "gateway"
       - "terminal"
   gateway:
-    container_name: gateway
-    image: pavja2/qpep:gateway
-    #build: gateway/
+    container_name: ${GW_CONTAINER_NAME:-gateway}
+    #image: pavja2/qpep:gateway
+    build: gateway/
     ports:
       - "3141"
       - "5358"
@@ -35,12 +36,12 @@ services:
       - ../src/:/root/go/src
     networks:
       emulation:
-        ipv4_address: 172.20.0.3
+        ipv4_address: ${EMU_NETWORK_HEAD:-172.20}.0.3
         priority: 900
       gwlan:
-        ipv4_address: "172.22.0.3"
+        ipv4_address: "${GW_NETWORK_HEAD:-172.22}.0.3"
         priority: 1000
-        ipv6_address: 2001:660:6602:142:0:0:1:1
+        ipv6_address: ${GW_IP6_HEAD:-2001:660}:6602:142:0:0:1:1
     privileged: true
     cap_add:
       - ALL
@@ -52,9 +53,9 @@ services:
     environment:
       GOPATH: /root/go
   terminal:
-    container_name: terminal
-    image: pavja2/qpep:terminal
-    #build: terminal/
+    container_name: ${ST_CONTAINER_NAME:-terminal}
+    #image: pavja2/qpep:terminal
+    build: terminal/
     ports:
       - "3141"
       - "5358"
@@ -66,12 +67,12 @@ services:
       GOPATH: /root/go
     networks:
       emulation:
-        ipv4_address: 172.20.0.4
+        ipv4_address: ${EMU_NETWORK_HEAD:-172.20}.0.4
         priority: 900
       stlan:
-        ipv4_address: "172.21.0.4"
+        ipv4_address: "${ST_NETWORK_HEAD:-172.21}.0.4"
         priority: 1000
-        ipv6_address: 2001:661:6602:142:0:0:1:2
+        ipv6_address: ${ST_IP6_HEAD:-2001:661}:6602:142:0:0:1:2
     privileged: true
     cap_add:
       - ALL
@@ -81,28 +82,30 @@ services:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
   ws-st:
-    container_name: ws-st
-    image: pavja2/qpep:ws-st
-    #build: ws-st/
+    container_name: ${WS_ST_CONTAINER_NAME:-ws-st}
+    #image: pavja2/qpep:ws-st
+    build: ws-st/
     networks:
       stlan:
-        ipv4_address: "172.21.0.9"
+        ipv4_address: "${ST_NETWORK_HEAD:-172.21}.0.9"
       gui:
-        ipv4_address: "172.25.0.9"
+        ipv4_address: "${GUI_NETWORK_HEAD:-172.25}.0.9"
     privileged: true
     cap_add:
       - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     environment:
       DISPLAY:
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
   ws-gw:
-    container_name: ws-gw
-    image: pavja2/qpep:ws-gw
-    #build: ws-gw/
+    container_name: ${WS_GW_CONTAINER_NAME:-ws-gw}
+    #image: pavja2/qpep:ws-gw
+    build: ws-gw/
     networks:
       gwlan:
-        ipv4_address: "172.22.0.9"
+        ipv4_address: "${GW_NETWORK_HEAD:-172.22}.0.9"
     privileged: true
     cap_add:
       - NET_ADMIN
@@ -112,57 +115,61 @@ services:
       - "../src/:/root/go/src"
       - "./ws-gw/config:/opensand_config"
   ws-ovpn:
-    container_name: ws-ovpn
-    image: pavja2/qpep:ws-ovpn
-    #build: ws-ovpn/
+    container_name: ${WS_OVPN_CONTAINER_NAME:-ws-ovpn}
+    #image: pavja2/qpep:ws-ovpn
+    build: ws-ovpn/
     cap_add:
       - NET_ADMIN
     ports:
-      - "1994:1994/udp"
+      - "${WS_OVPN_PORT:-1994}:1994/udp"
     volumes:
       - ./ws-ovpn/:/etc/openvpn
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6= 1
     networks:
       gwlan:
-        ipv4_address: "172.22.0.10"
+        ipv4_address: "${GW_NETWORK_HEAD:-172.22}.0.10"
   sitespeed:
-    container_name: sitespeed
+    container_name: ${SITESPEED_CONTAINER_NAME:-sitespeed}
     build: sitespeed/
     cap_add:
       - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     networks:
       stlan:
-        ipv4_address: "172.21.0.15"
+        ipv4_address: "${ST_NETWORK_HEAD:-172.21}.0.15"
 networks:
   emulation:
-    name: emulation
+    name: ${EMU_NETWORK_NAME:-emulation}
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: "172.20.0.0/24"
+        - subnet: "${EMU_NETWORK_HEAD:-172.20}.0.0/24"
   gwlan:
-    name: gwlan
+    name: ${GW_NETWORK_NAME:-gwlan}
     driver: bridge
     enable_ipv6: true
     ipam:
       driver: default
       config:
-        - subnet: "172.22.0.0/24"
-        - subnet: "2001:660:6602:142::1/64"
+        - subnet: "${GW_NETWORK_HEAD:-172.22}.0.0/24"
+        - subnet: "${GW_IP6_HEAD:-2001:660}:6602:142::1/64"
   stlan:
-    name: stlan
+    name: ${ST_NETWORK_NAME:-stlan}
     driver: bridge
     enable_ipv6: true
     ipam:
       driver: default
       config:
-        - subnet: "172.21.0.0/24"
-        - subnet: "2001:661:6602:142::1/64"
+        - subnet: "${ST_NETWORK_HEAD:-172.21}.0.0/24"
+        - subnet: "${ST_IP6_HEAD:-2001:661}:6602:142::1/64"
   gui:
-    name: gui
+    name: ${GUI_NETWORK_NAME:-gui}
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: "172.25.0.0/24"
-          gateway: "172.25.0.1"
+        - subnet: "${GUI_NETWORK_HEAD:-172.25}.0.0/24"
+          gateway: "${GUI_NETWORK_HEAD:-172.25}.0.1"

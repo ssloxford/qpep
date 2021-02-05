@@ -5,11 +5,14 @@ import nclib
 import docker
 import time
 import xml.etree.ElementTree as ET
+from dotenv import load_dotenv
+load_dotenv()
 
 class BasicTestbed(object):
-    def __init__(self, host_ip="192.168.1.199", display_number=0):
+    def __init__(self, host_ip="192.168.1.199", display_number=0, linux=False):
         self.host_ip = host_ip
         self.display_number = display_number
+        self.linux = linux
 
     def start_testbed(self):
         # First, shut down any old running testbeds
@@ -28,7 +31,7 @@ class BasicTestbed(object):
         opensand_launched = False
         while not opensand_launched:
             try:
-                nc = nclib.Netcat(('localhost', 5656), verbose=False)
+                nc = nclib.Netcat(('localhost', int(os.getenv('SAT_PORT_NUMBER'))), verbose=False)
                 nc.recv_until(b'help')
                 nc.recv()
                 nc.send(b'status\n')
@@ -50,9 +53,9 @@ class BasicTestbed(object):
         # now that the network is running, it is possible to add ip routes from user terminal through the network
         logger.debug("Connecting User Terminal to Satellite Spot Beam")
         docker_client = docker.from_env()
-        terminal_container = docker_client.containers.get("terminal")
+        terminal_container = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
         terminal_container.exec_run("/sbin/ip route delete default")
-        terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
+        terminal_container.exec_run("/sbin/ip route add default via " + str(os.getenv("GW_NETWORK_HEAD")) + ".0.3")
         logger.success("OpeSAND Testbed Running")
 
     def stop_testbed(self):
@@ -62,32 +65,32 @@ class BasicTestbed(object):
     def connect_terminal_workstation(self):
         logger.debug("Starting User Workstation")
         docker_client = docker.from_env()
-        workstation_container = docker_client.containers.get("ws-st")
+        workstation_container = docker_client.containers.get(os.getenv("WS_ST_CONTAINER_NAME"))
         logger.debug("Adding External Route to Docker Host for GUI Services")
-        workstation_container.exec_run("ip route add " + str(self.host_ip) + " via 172.25.0.1 dev eth1")
+        workstation_container.exec_run("ip route add " + str(self.host_ip) + " via " + str(os.getenv("GUI_NETWORK_HEAD"))+".0.1 dev eth1")
         logger.debug("Connecting User Workstation to Satellite Router")
         workstation_container.exec_run("ip route del default")
-        workstation_container.exec_run("ip route add default via 172.21.0.4")
+        workstation_container.exec_run("ip route add default via " + str(os.getenv("ST_NETWORK_HEAD"))+".0.4")
         logger.success("Client Workstation Connected to Satellite Network")
 
     def connect_sitespeed_workstation(self):
         logger.debug("Starting Sitespeed Workstation")
         docker_client = docker.from_env()
-        sitespeed_container = docker_client.containers.get("sitespeed")
+        sitespeed_container = docker_client.containers.get(os.getenv("SITESPEED_CONTAINER_NAME"))
         sitespeed_container.exec_run("ip route del default")
-        sitespeed_container.exec_run("ip route add default via 172.21.0.4")
+        sitespeed_container.exec_run("ip route add default via " + str(os.getenv("ST_NETWORK_HEAD"))+".0.4")
         logger.success("Sitespeed Workstation Connected to Satellite Network")
 
     def launch_wireshark(self):
         logger.debug("Starting Wireshark on Satellite Endpoint")
         docker_client = docker.from_env()
-        satellite_container = docker_client.containers.get("satellite")
+        satellite_container = docker_client.containers.get(os.getenv("SAT_CONTAINER_NAME"))
         satellite_container.exec_run("wireshark", detach=True)
 
     def launch_web_browser(self):
         logger.debug("Launching Web Browser on User Workstation")
         docker_client = docker.from_env()
-        workstation_container = docker_client.containers.get("ws-st")
+        workstation_container = docker_client.containers.get(os.getenv("WS_ST_CONTAINER_NAME"))
         workstation_container.exec_run("qupzilla", detach=True)
 
     def set_downlink_attenuation(self, attenuation_value=0):
@@ -105,6 +108,22 @@ class BasicTestbed(object):
         gw_conf.write(gw_path)
         st_conf.write(st_path)
         logger.debug("Updated Downlink Attenuations")
+    
+    def set_plr_percentage(self, plr_percentage, st_out=False, gw_out=True):
+        logger.debug("Configuring Packet Loss Rate")
+        docker_client = docker.from_env()
+        containers_to_mod = []
+        if st_out:
+            logger.debug("Setting PLR for ST->GW at " + str(plr_percentage))
+            containers_to_mod.append(docker_client.containers.get(os.getenv("ST_CONTAINER_NAME")))
+        if gw_out:
+            logger.debug("Setting PLR for GW->ST at " + str(plr_percentage))
+            containers_to_mod.append(docker_client.containers.get(os.getenv("GW_CONTAINER_NAME")))
+        for container in containers_to_mod:
+            response = container.exec_run('/sbin/tc qdisc change dev opensand_tun root netem loss ' + str(plr_percentage) + "%", stderr=True, stdout=True)
+            if "RTNETLINK" in str(response.output):
+                container.exec_run('/sbin/tc qdisc add dev opensand_tun root netem loss ' + str(plr_percentage) + "%", stderr=True, stdout=True)
+        logger.debug("Updated PLR to " + str(plr_percentage) + "%")
 
     def run_attenuation_scenario(self):
         logger.debug("Running Attenuation Scenario")
@@ -113,7 +132,7 @@ class BasicTestbed(object):
         nc = None
         while not opensand_launched:
             try:
-                nc = nclib.Netcat(('localhost', 5656), verbose=False)
+                nc = nclib.Netcat(('localhost', int(os.getenv('SAT_PORT_NUMBER'))), verbose=False)
                 nc.recv_until(b'help')
                 nc.recv()
                 opensand_launched = True
@@ -140,9 +159,9 @@ class BasicTestbed(object):
 
         # ensure that the terminal modem is still connected
         docker_client = docker.from_env()
-        terminal_container = docker_client.containers.get("terminal")
+        terminal_container = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
         #terminal_container.exec_run("/sbin/ip route delete default")
-        terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
+        terminal_container.exec_run("/sbin/ip route add default via " + str(os.getenv("GW_NETWORK_HEAD"))+".0.3")
 
         logger.debug("Attenuation Scenario Launched")
 
@@ -164,7 +183,7 @@ class LeoTestbed(BasicTestbed):
         opensand_launched = False
         while not opensand_launched:
             try:
-                nc = nclib.Netcat(('localhost', 5656), verbose=False)
+                nc = nclib.Netcat(('localhost', int(os.getenv('SAT_PORT_NUMBER'))), verbose=False)
                 nc.recv_until(b'help')
                 nc.recv()
                 nc.send(b'status\n')
@@ -190,7 +209,7 @@ class LeoTestbed(BasicTestbed):
         # now that the network is running, it is possible to add ip routes from user terminal through the network
         logger.debug("Connecting User Terminal to Satellite Spot Beam")
         docker_client = docker.from_env()
-        terminal_container = docker_client.containers.get("terminal")
+        terminal_container = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
         terminal_container.exec_run("/sbin/ip route delete default")
-        terminal_container.exec_run("/sbin/ip route add default via 172.22.0.3")
+        terminal_container.exec_run("/sbin/ip route add default via " + str(os.getenv("GW_NETWORK_HEAD")) + ".0.3")
         logger.success("OpeSAND Testbed Running")

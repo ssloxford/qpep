@@ -4,4 +4,4 @@ service avahi-daemon start
 opensand_interfaces
 sand-collector -b
 sand-daemon
-sand-manager -i
+xvfb-run sand-manager -i

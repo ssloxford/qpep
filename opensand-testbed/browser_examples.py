@@ -5,12 +5,14 @@ from scenarios import QPEPScenario, PEPsalScenario, PlainScenario, OpenVPNScenar
 
 
 def validate_ip(addr):
-    try:
-        ipaddress.IPv4Network(addr)
-    except ValueError:
-        raise argparse.ArgumentTypeError("%s is not a valid IPv4 address for your XServer" % addr)
-    return addr
-
+    if addr != "linux":
+        try:
+            ipaddress.IPv4Network(addr)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not a valid IPv4 address for your XServer" % addr)
+        return addr
+    else:
+        return ''
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -28,7 +28,9 @@ In conjunction with QPEP, this repository also contains a dockerized testbed bas
   * [License](#license)
   * [Acknowledgments](#acknowledgments)
 # Getting Started
-These instructions will help you get QPEP configured and running inside the dockerized testbed. The QPEP testbed has been extensively tested on Windows 10 Professional Edition (with Hyper-V & Docker) but will likely cooperate on *nix systems as well.
+These instructions will help you get QPEP configured and running inside the dockerized testbed. The QPEP testbed has been extensively tested on Windows 10 Professional Edition (with Hyper-V & Docker) but will likely cooperate on *nix systems as well. 
+
+>One important caveat when running on linux hosts is that *nix or WSL2 Docker installations share the host's TCP/IP stack, while [Windows + Hyper-V provides containers with virtualized NICs](https://docs.microsoft.com/en-us/virtualization/windowscontainers/container-networking/architecture). This means you may see strange results when making connections external to the testbed environment (e.g. to the open internet) from *nix Docker installations.
 
 ## Prerequisites
 Ensure that you have all of the following prerequisites on your machine:
@@ -47,7 +49,7 @@ First, create a new directory and clone this github repository into it.
 > cd C:\qpep
 > git clone https://github.com/pavja2/qpep --recursive
 ```
-Create a python3 virtualenv inside the directory and use pip to install necessary python dependencies ([docker-py](https://pypi.org/project/docker/), [loguru](https://pypi.org/project/loguru/) and [nclib](https://pypi.org/project/nclib/)):
+Create a python3 virtualenv inside the directory and use pip to install necessary python dependencies ([docker-py](https://pypi.org/project/docker/), [loguru](https://pypi.org/project/loguru/), [numpy](https://numpy.org/), [python-dotenv](https://github.com/theskumar/python-dotenv) and [nclib](https://pypi.org/project/nclib/)):
 ```
 > cd C:\qpep
 > python -m venv venv
@@ -176,6 +178,133 @@ $ wget https://www.google.com
 ```
 **Note:** One thing which can cause trouble is stopping the OpenSAND scenario once it has launched. This breaks the ip routes between containers in the network, causing traffic to be unroutable in some cases - even after you restart the scenario. Most of the time running ```scenario.deploy_scenario(testbed_up=True)``` is sufficient to fix this. However, PEPsal takes over network routes at a lower level and can prevent the py-docker library from communicating with containers. See the ```attenuation_test_pepsal_scenario``` method in ```simulation_examples.py``` for an example of how to run PEPsal under custom OpenSAND conditions programmatically.  
 
+## Running Multiple Simulations
+
+The provided ``simulation_examples.py`` file uses environment variables (contained inside the ``.env`` file in the ``opensand-testbed`` directory) to allow you to easily divide up tasks between multiple testbeds.
+
+When you make a change to the ``.env`` file, you **must** also run:
+```
+> cd C:\qpep\qpep\opensand-testbed
+> python configurator.py
+```
+The configurator script reads values from the ``.env`` file and uses resets your docker containers accordingly. If you make changes to the networking configuration, it's also a good idea to stop and remove your old QPEP testbed containers (note: this script will stop _all_ docker containers running on your host, so use it with care):
+```
+> docker stop $(docker ps -a -q)
+> docker rm $(docker ps -a -q)
+> docker network prune
+```
+
+This ``.env`` pattern makes it easy to run a handful of simulations concurrently. That said, be conscious of available system resources to avoid having CPU limitations give inaccurate benchmarking results. In our experiments, we limited simulations to 5 testbeds, which matched the outputs of single-testbed measurements. Above 20 or so testbeds and you can expect to see issues where later benchmarks run much faster as other experiments finish and release resources.
+
+Here's an example of using the ``.env`` environment to orchestrate many testbeds and run the ``simulation_examples.py`` file in each. The ultimate result will be the same as running ``simulation_examples.py`` directly for the "Plain" scenario.
+
+```python
+from jinja2 import Template
+from math import ceil
+import pprint
+from distutils.dir_util import copy_tree
+import subprocess
+import os
+import sys
+BASE_TESTBED = "opensand-testbed/"
+
+def partitionIndexes(totalsize, numberofpartitions):
+    chunksize = int(totalsize / numberofpartitions)
+    remainder = totalsize - chunksize * numberofpartitions
+    a = 0
+    for i in range(0, numberofpartitions):
+        b = a + chunksize + (i < remainder)
+        yield (a, b - 1)
+        a = b
+
+
+def get_experiment_indexes(param_size, num_chunks):
+    return [(i, i+num_chunks) for i in range(0, 20, num_chunks)]
+
+def define_scenario_requirements(num_chunks, data_len, scenario_list):
+    experiment_indexes = list(partitionIndexes(data_len, num_chunks))
+    final_requirements = []
+    for scenario in scenario_list:
+        for experiment_index in experiment_indexes:
+            final_requirements.append((scenario, experiment_index))
+    return final_requirements
+
+template_settings_dict = {
+    "name_suffix": 1,
+    "sat_port_number": 6000,
+    "ip_suffix": 100,
+    "ip6_suffix": 600,
+    "ovpn_port_number": 7000,
+    "scenario_name": "Plain",
+    "plt_iterations": 100,
+    "plt_sub_iterations": 1,
+    "alexa_min": 0,
+    "alexa_max": 10,
+    "iperf_min_size_index": 0,
+    "iperf_max_size_index": 25,
+    "iperf_iterations": 10,
+    "iperf_min_attenuation_index": 0,
+    "iperf_max_attenuation_index": 10
+}
+
+
+def generate_settings_dicts(num_chunks=8, base_sat_port_number=6000,\
+    base_ip_suffix=10, base_ip6_suffix=600, base_ovpn_port_number=7000, plt_iterations=100, \
+    plt_sub_iterations=1, alexa_len=20, iperf_len=50, iperf_iterations=50, iperf_attenuation_len=20,\
+    plr_length=28, plr_meta_iterations=10, plr_plt_iterations=10,\
+    ack_bundling_length=31, scenario_list=["Plain", "OpenVPN", "PEPSal", "Distributed PEPsal", "QPEP"]):
+
+    print("Preparing ", num_chunks*len(scenario_list), "testbeds")
+    alexa_scenarios = define_scenario_requirements(num_chunks, alexa_len, scenario_list)
+    iperf_scenarios = define_scenario_requirements(num_chunks, iperf_len, scenario_list)
+    attenuation_scenarios = define_scenario_requirements(num_chunks, iperf_attenuation_len, scenario_list)
+    plr_scenarios = define_scenario_requirements(num_chunks, plr_length, scenario_list)
+    ack_bundling_scenarios = define_scenario_requirements(num_chunks, ack_bundling_length, scenario_list)
+    settings_list = []
+    for i in range(1, (num_chunks*len(scenario_list)+1)):
+        current_dict = {
+            "name_suffix": i,
+            "sat_port_number": base_sat_port_number + i,
+            "ip_suffix": base_ip_suffix + i*5,
+            "ip6_suffix": base_ip6_suffix + i*5,
+            "ovpn_port_number": base_ovpn_port_number + i,
+            "scenario_name": alexa_scenarios[i-1][0],
+            "plt_iterations": plt_iterations,
+            "plt_sub_iterations": plt_sub_iterations,
+            "alexa_min": alexa_scenarios[i-1][1][0],
+            "alexa_max": alexa_scenarios[i-1][1][1],
+            "iperf_min_size_index": iperf_scenarios[i-1][1][0],
+            "iperf_max_size_index": iperf_scenarios[i-1][1][1],
+            "iperf_iterations": iperf_iterations,
+            "iperf_min_attenuation_index": attenuation_scenarios[i-1][1][0],
+            "iperf_max_attenuation_index": attenuation_scenarios[i-1][1][1],
+            "plr_min_index": plr_scenarios[i-1][1][0],
+            "plr_max_index": plr_scenarios[i-1][1][1],
+            "plr_meta_iterations": plr_meta_iterations,
+            'plr_plt_iterations': plr_plt_iterations,
+            'ack_bundling_min': ack_bundling_scenarios[i-1][1][0],
+            'ack_bundling_max': ack_bundling_scenarios[i-1][1][1]
+        }
+        settings_list.append(current_dict)    
+    return settings_list
+
+settings_dicts = generate_settings_dicts()
+dirnames = []
+configurator_procs = []
+root_directory = os.path.dirname(__file__)
+for settings_dict in settings_dicts:
+    testbed_dir_name = "opensand_testbed" + str(settings_dict["name_suffix"]) + "/"
+    copy_tree(BASE_TESTBED, testbed_dir_name)
+    template = Template(open('env_template.j2').read())
+    template.stream(settings_dict).dump(testbed_dir_name + ".env")
+    configurator_procs.append(subprocess.Popen([sys.executable, 'configurator.py'], cwd=root_directory + testbed_dir_name))
+    dirnames.append(testbed_dir_name)
+
+exit_codes = [p.wait() for p in configurator_procs]
+print("Done Configurating. Navigate to the docker directories and run docker-compose build followed by simulation_examples.py to launch", exit_codes)
+```
+
+
 # Using Standalone QPEP
  
 >:warning: **Disclaimer**: While it is possible to configure and run QPEP outside of the testbed environment, this is discouraged for anything other than experimental testing. The current release of QPEP is a proof-of-concept research tool and, while every effort has been made to make it secure and reliable, it has not been vetted sufficiently for its use in critical satellite communications. Commercial use of this code in its current state would be **exceptionally foolhardy**. When QPEP reaches a more mature state, this disclaimer will be updated.
@@ -261,10 +390,8 @@ Various other benchmarking tools and libraries have authorship and license infor
 ## References in Publications 
 QPEP and the corresponding testbed were both designed to encourage academic research into secure and performant satellite communications. We would be thrilled to learn about projects you're working on academically or in industry which build on QPEP's contribution!
 
-If you use QPEP or something based on it, please cite the conference paper which introduces QPEP:
-> Paper currently under peer-review. In the interim, please cite our pre-print from arXiv:
->
-> Pavur, James, Martin Strohmeier, Vincent Lenders, and Ivan Martinovic. “QPEP: A QUIC-Based Approach to Encrypted Performance Enhancing Proxies for High-Latency Satellite Broadband.” ArXiv:2002.05091, February 12, 2020. [http://arxiv.org/abs/2002.05091](http://arxiv.org/abs/2002.05091).
+If you use QPEP, the dockerized testbed, or something based on it, please cite the conference paper which introduces QPEP:
+> Pavur, James, Martin Strohmeier, Vincent Lenders, and Ivan Martinovic. QPEP: An Actionable Approach to Secure and Performant Broadband From Geostationary Orbit. Network and Distributed System Security Symposium (NDSS 2021), February 2021. [https://ora.ox.ac.uk/objects/uuid:e88a351a-1036-445f-b79d-3d953fc32804](https://ora.ox.ac.uk/objects/uuid:e88a351a-1036-445f-b79d-3d953fc32804).
 
 ## License
 The Clear BSD License

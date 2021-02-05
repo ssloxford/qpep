@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,20 +11,9 @@ import (
 )
 
 func main() {
-	clientFlag := flag.Bool("client", false, "a bool")
-	ackElicitingFlag := flag.Int("acks", 10, "Number of acks to bundle")
-	ackDecimationFlag := flag.Int("decimate", 4, "Denominator of Ack Decimation Ratio")
-	congestionWindowFlag := flag.Int("congestion", 4, "Number of QUIC packets for initial congestion window")
-	gatewayFlag := flag.String("gateway", "198.18.0.254", "IP address of gateway running qpep")
-	multiStreamFlag := flag.Bool("multistream", true, "Enable multiplexed QUIC streams inside a single session")
-	flag.Parse()
-	shared.QuicConfiguration.AckElicitingPacketsBeforeAck = *ackElicitingFlag
-	shared.QuicConfiguration.AckDecimationDenominator = *ackDecimationFlag
-	shared.QuicConfiguration.InitialCongestionWindowPackets = *congestionWindowFlag
-	shared.QuicConfiguration.MultiStream = *multiStreamFlag
-	client.ClientConfiguration.GatewayHost = *gatewayFlag
+	client.ClientConfiguration.GatewayHost = shared.QuicConfiguration.GatewayIP
 
-	if *clientFlag {
+	if shared.QuicConfiguration.ClientFlag {
 		fmt.Println("Running Client")
 		go client.RunClient()
 	} else {

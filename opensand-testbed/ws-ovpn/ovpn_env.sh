@@ -21,5 +21,5 @@ declare -x OVPN_PROTO=udp
 declare -x OVPN_PUSH=()
 declare -x OVPN_ROUTES=([0]="192.168.254.0/24")
 declare -x OVPN_SERVER=192.168.255.0/24
-declare -x OVPN_SERVER_URL=udp://172.22.0.10
+declare -x OVPN_SERVER_URL=udp://172.12.0.10
 declare -x OVPN_TLS_CIPHER=

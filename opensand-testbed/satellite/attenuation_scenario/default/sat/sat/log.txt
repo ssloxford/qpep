@@ -1,2 +1,0 @@
-1580490921.604969 Status Blocks initialized
-1580491007.431010 Status Simulation stopped

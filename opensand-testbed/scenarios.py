@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 from loguru import logger
 import docker
 import time
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class Scenario(ABC):
     def __init__(self, name, testbed, benchmarks):
@@ -38,7 +41,7 @@ class OpenVPNScenario(Scenario):
         if not testbed_up:
             super().deploy_scenario()
         docker_client = docker.from_env()
-        terminal_workstation = docker_client.containers.get("ws-st")
+        terminal_workstation = docker_client.containers.get(os.getenv("WS_ST_CONTAINER_NAME"))
         # Satellite latency means that it takes OpenVPN a long time to establish the connection, waiting is easiest
         logger.debug("Launching OVPN and waiting...")
         terminal_workstation.exec_run("openvpn --config /root/client.ovpn --daemon")
@@ -56,11 +59,11 @@ class QPEPScenario(Scenario):
         docker_client = docker.from_env()
 
         logger.debug("Configuring Client Side of QPEP Proxy")
-        terminal_container = docker_client.containers.get("terminal")
+        terminal_container = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
         terminal_container.exec_run("bash /opensand_config/configure_qpep.sh")
 
         logger.debug("Configuring Gateway Side of QPEP Proxy")
-        gateway_workstation = docker_client.containers.get("ws-gw")
+        gateway_workstation = docker_client.containers.get(os.getenv("WS_GW_CONTAINER_NAME"))
         gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
 
         if testbed_up:
@@ -69,8 +72,7 @@ class QPEPScenario(Scenario):
             terminal_container.exec_run("pkill -9 main")
 
         logger.debug("Launching QPEP Client")
-        #terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -multistream " + str(self.multi_stream).lower(), detach=True)
-        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 ", detach=True)
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway " + str(os.getenv("GW_NETWORK_HEAD")) + ".0.9 ", detach=True)
         logger.debug("Launching QPEP Gateway")
         gateway_workstation.exec_run("go run /root/go/src/qpep/main.go", detach=True)
         logger.success("QPEP Running")
@@ -81,8 +83,8 @@ class QPEPAckScenario(Scenario):
             super().deploy_scenario()
 
         docker_client = docker.from_env()
-        terminal_container = docker_client.containers.get("terminal")
-        gateway_workstation = docker_client.containers.get("ws-gw")
+        terminal_container = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
+        gateway_workstation = docker_client.containers.get(os.getenv("WS_GW_CONTAINER_NAME"))
         if testbed_up:
             logger.debug("Killing any prior QPEP")
             terminal_container.exec_run("pkill -9 main")
@@ -96,9 +98,9 @@ class QPEPAckScenario(Scenario):
             gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
 
         logger.debug("Launching QPEP Client")
-        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -acks " + str(ack_level), detach=True)
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -minBeforeDecimation 2 -ackDelay 8000 -varAckDelay 16.0 -gateway " + str(os.getenv("GW_NETWORK_HEAD")) + ".0.9 -acks " + str(ack_level), detach=True)
         logger.debug("Launching QPEP Gateway")
-        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -acks " + str(ack_level), detach=True)
+        gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -minBeforeDecimation 2 -ackDelay 8000 -varAckDelay 16.0", detach=True)
         logger.success("QPEP Running")
 
 
@@ -108,8 +110,8 @@ class QPEPCongestionScenario(Scenario):
             super().deploy_scenario()
 
         docker_client = docker.from_env()
-        terminal_container = docker_client.containers.get("terminal")
-        gateway_workstation = docker_client.containers.get("ws-gw")
+        terminal_container = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
+        gateway_workstation = docker_client.containers.get(os.getenv("WS_GW_CONTAINER_NAME"))
         if testbed_up:
             logger.debug("Killing any prior QPEP")
             terminal_container.exec_run("pkill -9 main")
@@ -123,7 +125,7 @@ class QPEPCongestionScenario(Scenario):
             gateway_workstation.exec_run("bash /opensand_config/configure_qpep.sh")
 
         logger.debug("Launching QPEP Client")
-        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway 172.22.0.9 -congestion " + str(congestion_window), detach=True)
+        terminal_container.exec_run("go run /root/go/src/qpep/main.go -client -gateway " + str(os.getenv("GW_NETWORK_HEAD")) +".0.9 -congestion " + str(congestion_window), detach=True)
         logger.debug("Launching QPEP Gateway")
         gateway_workstation.exec_run("go run /root/go/src/qpep/main.go -congestion " + str(congestion_window), detach=True)
         logger.success("QPEP Running")
@@ -146,9 +148,9 @@ class PEPsalScenario(Scenario):
 
         if self.terminal:
             logger.debug("Deploying PEPsal on Terminal Endpoint")
-            terminal_client = docker_client.containers.get("terminal")
+            terminal_client = docker_client.containers.get(os.getenv("ST_CONTAINER_NAME"))
             terminal_client.exec_run("bash /opensand_config/launch_pepsal.sh")
         if self.gateway:
             logger.debug("Deploying PEPsal on Gateway Endpoint")
-            gateway_client = docker_client.containers.get("gateway")
+            gateway_client = docker_client.containers.get(os.getenv("GW_CONTAINER_NAME"))
             gateway_client.exec_run("bash /opensand_config/launch_pepsal.sh")
