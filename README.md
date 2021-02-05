@@ -345,9 +345,14 @@ $ ./qpep
 ```
 ### Changing Further QUIC Parameters
 QPEP comes with a forked and modified version of the quic-go library which allows for altering some basic constants in the default QUIC implementation. These are provided as command-line flags and can be implemented on both the QPEP server and QPEP client. You can use ```qpep -h``` to see basic help output. The available options are:
-* ```-acks [int]``` Sets the number of ack-eliciting packets per ack
-* ```-congestion [int]``` Sets the size of the initial QUIC congestion window in number of QUIC packets
-* ```-decimate [int]``` Sets the denominantor of the ACK decimation ratio (e.g. 4 for 1/4 RTT)
+* ```-acks [int]``` Sets the number of ack-eliciting packets per ack. The default ratio is 10:1.
+* ```-congestion [int]``` Sets the size of the initial QUIC congestion window in number of QUIC packets. Defaults to 4.
+* ```-multistream [bool]``` Enables multiplexing QUIC streams inside a meta-session. Default is true.
+* ```-ackDelay [int]``` Maximum number of miliseconds to hold back an ack for decimation. Default is 25.
+* ```-varAckDelay [float]``` Variable number of miliseconds to try and hold back an ack for decimation, as multiple of RTT. Default is 0.25.
+* ```-minBeforeDecimation [int]``` Minimum number of packets sent before initiating any ack decimation. Default is 100.
+* ```-client [bool]``` runs QPEP in client mode. Default is false.
+* ```-gateway [ip]``` sets the gateway address for a QPEP client to connect to. Default is 192.18.0.254 but you will probably need to set it yourself based on your network config.
 
 # Contributing
 Contributions are very much welcome. Just make a pull request and reference any relevant issues in the github by issue number so I can review it.
@@ -355,7 +360,7 @@ Contributions are very much welcome. Just make a pull request and reference any 
 ## Editing the Docker Testbed
 To reduce launch times, pre-built images are pulled in the docker-compose.yml file from the docker hub: https://hub.docker.com/repository/docker/pavja2/qpep
 
-However, if you wish to modify the docker testbed, for example to add more terminal workstations or run more complicated scenarios you can simply comment out all of the lines which begin with ```image:``` in the opensand-testbed/docker-compose.yml and remove the comments from the lines which begin with ```build:```. After this a ```docker-compose build``` command run from the opensand-testbed directory should re-build the containers based on the contents of this repository. 
+However, if you wish to modify the docker testbed, for example to add more terminal workstations or run more complicated scenarios you can simply comment out all of the lines which begin with ```image:``` in the opensand-testbed/docker-compose.yml and remove the comments from the lines which begin with ```build:```. After this a ```docker-compose build``` command run from the opensand-testbed directory should re-build the containers based on the contents of this repository. Note that certain repositories (especially the openSAND repo) may have changed since QPEP's creation and compatibility with newer version of dependencies is not guaranteed.
 
 Dockerfiles for each container and other startup scripts and configurations can be found in sub-directories within opensand-testbed/ which are named after the respective container. For example, everything you need to build the satellite container can be found in opensand-testbed/satellite/. 
 
@@ -374,8 +379,7 @@ You can do this either from within the python interpreter with ```scenario.deplo
  
 ## Known Issues / Future Steps
 There are a few issues / next steps which would make sense to implement if you'd like to make a contribution but aren't sure what's needed. Specifically:
-* This only really works on Docker Desktop CE for Windows. While it may be possible to wrangle everything into a docker-compose setup for linux, it would be nice to make the XServer configuration more intuitive.
-* More benchmarks for the testbed environment are welcome - especially realistic ones reflective of actual web-browsing behavior over satllite links.
+* More benchmarks for the testbed environment are welcome - especially realistic ones reflective of actual web-browsing behavior over satellite links.
 * QPEP should have better support for setting TLS parameters in the QPEP server and client configuration.
 * While QPEP in theory supports IPv6, it has not been tested as the testbed has not been configured for IPv6 networking
 * QPEP does not yet tunnel UDP/ICMP traffic.
