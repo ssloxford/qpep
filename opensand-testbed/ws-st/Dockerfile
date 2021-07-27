@@ -14,6 +14,12 @@ RUN apt-get update
 # RUN apt-get install -y software-properties-common
 # RUN apt-get install -y apt-transport-https
 # RUN apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+RUN apt-get update && apt-get install -y nodejs
+RUN npm install -g browsertime@10.6.2
+RUN apt-get install -y firefox
+RUN apt-get install -y firefox-geckodriver
+RUN apt-get install -y xvfb
 COPY client.ovpn /root/client.ovpn
 COPY launch_firefox.sh /tmp/launch_firefox.sh
 RUN chmod +x /tmp/launch_firefox.sh

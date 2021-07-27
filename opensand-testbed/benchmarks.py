@@ -149,16 +149,16 @@ class SitespeedBenchmark(Benchmark):
         
         host_string = ''
         for i in range(0, self.iterations):
-            terminal_workstation = docker_client.containers.get(os.getenv("SITESPEED_CONTAINER_NAME"))
+            terminal_workstation = docker_client.containers.get(os.getenv("WS_ST_CONTAINER_NAME"))
             #Connect sitespeed container to satellite network
             terminal_workstation.exec_run("ip route del default")
             terminal_workstation.exec_run("ip route add default via " + str(os.getenv("ST_NETWORK_HEAD"))+".0.4")
             terminal_workstation.exec_run("wget http://1.1.1.1") #use this to warm up vpns/peps
             for host in self.hosts:
                 host_string = host + " "
-                host_result = terminal_workstation.exec_run('/usr/src/app/bin/browsertime.js -n ' + str(self.sub_iterations) +' --headless --browser firefox --cacheClearRaw --firefox.preference network.dns.disableIPv6:true --video=false --visualMetrics=false --visualElements=false ' + str(host_string))
+                host_result = terminal_workstation.exec_run('/usr/bin/browsertime -n ' + str(self.sub_iterations) +' --headless --xvfb --browser firefox --cacheClearRaw  --firefox.geckodriverPath /usr/bin/geckodriver --firefox.preference network.dns.disableIPv6:true --video=false --visualMetrics=false --visualElements=false ' + str(host_string))
                 matches = re.findall('Load: ([0-9.]+)([ms])', str(host_result))
-                if self.sub_iterations > 0:
+                if self.sub_iterations > 1:
                     matches = matches[:-1] # the last match is the average load time, which we don't want mixing up our stats
                 for match in matches:
                         # if the connection measures in milliseconds we take as is, otherwise convert
@@ -170,9 +170,9 @@ class SitespeedBenchmark(Benchmark):
                             self.results[host] = [host_val]
                     else:
                             self.results[host].append(host_val)
-                    print(host_result)
                 if len(matches) == 0:
                     logger.warning("No browsertime measurement for " + str(host_string))
+                    print(host_result)
                 else:
                     logger.debug("Browsertime: " + str(host_string) + " " + str(match[0]) + str(match[1]))
                 #count failed connections for host
